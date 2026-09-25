@@ -33,20 +33,20 @@
     .drawer {
         justify-content: flex-end;
         align-items: stretch;
+    }
 
-        article {
-            margin: 0;
-            width: min(400px, 90vw);
-            height: 100%;
-            max-height: none;
-            border-radius: 0;
-            overflow-y: auto;
-            animation: slide-in 0.2s ease-out;
-        }
+    .drawer article {
+        margin: 0;
+        width: min(400px, 90vw);
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+        overflow-y: auto;
+        animation: slide-in 2.0s ease-out;
+    }
 
-        @keyframes sline-in {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
-        }
+    @keyframes slide-in {
+        from { margin-right: -400; }
+        to { margin-right: 0; }
     }
 </style>

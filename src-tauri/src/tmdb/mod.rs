@@ -5,18 +5,21 @@ use ts_rs::TS;
 
 use crate::settings::Settings;
 
-#[derive(Serialize, Deserialize, TS)]
+#[derive(Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct MovieDetails {
+    id: i32,
     original_title: String,
-    poster_path: String
+    poster_path: String,
+    overview: String,
+    release_date: String,
 }
 
 #[tauri::command]
 pub async fn get_tmdb(app: AppHandle, movie_id: i32) -> Result<MovieDetails, String> {
     let settings: Settings = Settings::load(&app)?;
 
-    if(settings.tmdb_api_key.is_empty()) {
+    if settings.tmdb_api_key.is_empty() {
         return Err("TMDB API Key is not set. Add it in Settings.".into());
     }
 
@@ -30,7 +33,8 @@ pub async fn get_tmdb(app: AppHandle, movie_id: i32) -> Result<MovieDetails, Str
         .await
         .map_err(|e: reqwest::Error| e.to_string())?;
 
+
     let body: MovieDetails = res.json::<MovieDetails>().await.map_err(|e: reqwest::Error| e.to_string())?;
-    println!("{:?}", body.original_title);
+
     Ok(body)
 }
