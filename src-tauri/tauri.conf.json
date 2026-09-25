@@ -5,12 +5,11 @@
   "identifier": "com.draego.auto-mkv-ripper",
   "build": {
     "beforeDevCommand": "bun run dev",
-    "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "bun run build",
-    "frontendDist": "../dist"
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../build"
   },
   "app": {
-    "withGlobalTauri": true,
     "windows": [
       {
         "title": "auto-mkv-ripper",

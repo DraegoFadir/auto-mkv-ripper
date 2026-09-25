@@ -1,15 +1,16 @@
 <script lang="ts">
-    import Drawer from "./components/Drawer.svelte";
-    import { Settings } from "@lucide/svelte";
-    import SettingsForm from "./components/SettingsForm.svelte";
+    import "@picocss/pico/css/pico.indigo.min.css"
     import {onMount} from "svelte";
-    import { loadSettings } from "./lib/settings.svelte";
-    // import type { MediaResponse } from "./types/MediaResponse";
-    import SearchComponent from "./components/SearchComponent.svelte";
-    import { app } from "./lib/app.svelte";
+    import { Settings } from "@lucide/svelte";
+
+    import DrawerComponent from "../components/DrawerComponent.svelte";
+    import SettingsFormComponent from "../components/SettingsFormComponent.svelte";
+    import { loadSettings } from "../lib/settings.svelte";
+    import { app } from "../lib/app.svelte";
 
     onMount(loadSettings);
 
+    let { children } = $props();
     let settingsOpen: boolean = $state(false);
 
     // let media: MediaResponse | null = $state(null);
@@ -38,7 +39,7 @@
 
 <main class="container">
 
-    <SearchComponent />
+    {@render children()}
 
 </main>
 
@@ -61,9 +62,30 @@
         </nav>
 </footer>
 
-<Drawer bind:open={settingsOpen} title="Settings">
-    <SettingsForm />
-</Drawer>
+<DrawerComponent bind:open={settingsOpen} title="Settings">
+    <SettingsFormComponent />
+</DrawerComponent>
 
 <style>
+    :global(body) {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    :global(body > main) {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    :global(body > header) {
+        background: var(--pico-card-background-color);
+        border-bottom: 1px solid var(--pico-muted-border-color);
+    }
+
+    :global(body > footer) {
+        background: var(--pico-card-background-color);
+        border-top: 1px solid var(--pico-muted-border-color);
+    }
 </style>
