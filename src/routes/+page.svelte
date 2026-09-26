@@ -4,6 +4,8 @@
     import type { MediaResponse } from "../types/MediaResponse";
     import { app } from "../lib/app.svelte";
 
+    app.nextStep = "scan";
+
     let searchId: string = $state("");
     let loading: boolean = $state(false);
     let result: MovieDetails | null = $state(null)
@@ -49,10 +51,6 @@
     
         try {
             result = await invoke("get_tmdb", { movieId: parseInt(searchId) })
-
-            
-
-            console.log(result)
         } catch(e) {
             console.log(e)
         }

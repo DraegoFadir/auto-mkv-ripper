@@ -25,12 +25,12 @@
 <header class="container-fluid">
     <nav>
         <ul>
-            <li><strong>Auto MKV Ripper</strong></li>
+            <li><h1>Auto MKV Ripper</h1></li>
         </ul>
         <ul>
             <li>
                 <a href="#" aria-label="Settings" onclick={openSettings}>
-                    <Settings size={20} />
+                    <Settings size={50} />
                 </a>
             </li>
         </ul>
@@ -57,7 +57,7 @@
             {/if}
 
             <ul>
-                <li><button disabled={app.mediaSelected.length == 0}>Next</button></li>
+                <li><button disabled={app.nextDisabled} onclick={() => app.next()}>Next</button></li>
             </ul>
         </nav>
 </footer>
@@ -67,6 +67,9 @@
 </DrawerComponent>
 
 <style>
+    h1 {
+        margin-bottom: 0;
+    }
     :global(body) {
         display: flex;
         flex-direction: column;

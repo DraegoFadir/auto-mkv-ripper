@@ -16,6 +16,7 @@
 
 <form onsubmit={save}>
     <fieldset>
+        <legend>API Keys</legend>
         <label>
             API Key (TMDB)
             <input type="password" name="tmdb_api_key" placeholder="TMDB API Key" bind:value={settings.tmdb_api_key} aria-label="TMDB API Key" />
