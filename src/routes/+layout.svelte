@@ -46,13 +46,23 @@
 <footer class="container-fluid">
         <nav class="container">
 
-            {#if app.mediaSelected.length > 0}
+            {#if app.nextStep == "scan" && app.mediaSelected.length > 0}
                 <ul>
                     <li><strong>Media Selected: ({app.mediaSelected.length})</strong></li>
                 </ul>
-            {:else}
+            {:else if app.nextStep == "scan"}
                 <ul>
-                    <li><strong>Please select one media to continue</strong></li>
+                    <li><strong>Please select media to continue</strong></li>
+                </ul>
+            {/if}
+
+            {#if app.nextStep == "title-mapping" && app.titlesSelected.length > 0}
+                <ul>
+                    <li><strong>Titles Selected: ({app.titlesSelected.length})</strong></li>
+                </ul>
+            {:else if app.nextStep == "title-mapping"}
+                <ul>
+                    <li><strong>Please select title to continue</strong></li>
                 </ul>
             {/if}
 

@@ -1,22 +1,73 @@
-use std::process::Command;
+use std::{collections::BTreeMap, process::Command};
+use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-use tauri::AppHandle;
-
-#[tauri::command]
-pub async fn scan_disc(app: AppHandle) -> Result<(), String> {
-    let output = makemkvcon()
-        .args(["-r", "info", "disc:0"])
-        .output()
-        .map_err(|e| e.to_string())?;
-
-    println!("{:?}", output);
-    Ok(())
+#[derive(Default, Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct Title {
+    index: u32,
+    name: Option<String>,
+    chapters: Option<u32>,
+    duration: Option<String>,
+    #[ts(type = "number | null")]
+    size_bytes: Option<u64>,
+    playlist: Option<String>,
+    segment_map: Option<String>
 }
 
+
+#[derive(Deserialize)]
+struct DiscInfoRow {
+    title: u32,
+    attr: u32,
+    _code: u32,
+    value: String
+}
+
+#[tauri::command]
+pub async fn scan_disc() -> Result<Vec<Title>, String> {
+    let output = makemkvcon()
+        .args(["-r", "--minlength=3600", "info", "disc:0"])
+        .output()
+        .map_err(|e: std::io::Error| e.to_string())?;
+
+    // This block was created with assistance of AI :(
+    // I am a failure
+    {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let tinfo: String = stdout.lines().filter_map(|x: &str| x.strip_prefix("TINFO:")).collect::<Vec<_>>().join("\n");
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_reader(tinfo.as_bytes());
+
+        let mut titles: BTreeMap<u32, Title> = BTreeMap::new();
+
+        for row in reader.deserialize::<DiscInfoRow>() {
+            let row: DiscInfoRow = row.map_err(|e| e.to_string())?;
+            let t: &mut Title = titles
+                .entry(row.title)
+                .or_insert_with(|| Title {index: row.title, ..Default::default() });
+
+            match row.attr {
+                2 => t.name = Some(row.value),
+                8 => t.chapters = row.value.parse().ok(),
+                9 => t.duration = Some(row.value),
+                11 => t.size_bytes = row.value.parse().ok(),
+                16 => t.playlist = Some(row.value),
+                26 => t.segment_map = Some(row.value),
+                _ => {}
+            }
+        }
+
+        Ok(titles.into_values().collect())
+    }
+}
+
+// Function was AI Assisted
 fn makemkvcon() -> Command {
     #[cfg(target_os = "linux")]
     {
-        let mut cmd = Command::new("flatpak");
+        let mut cmd: Command = Command::new("flatpak");
         cmd.args([
             "run",
             "--command=makemkvcon",
