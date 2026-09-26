@@ -14,9 +14,9 @@
         loading = true;
         try {
             let result: Title[] = await invoke("scan_disc", { })
-            console.log(result);
             titles = result;
         } catch(e) {
+            //TODO: Test with disc I know is bad
             console.log("Error", e)
         }
         loading = false;
@@ -34,36 +34,36 @@
     </div>
     <input type="button" class="secondary" value="Start Scan" onclick={startScan} />
 
-    {#if titles}
-    <h2>Select Titles to Map</h2>
-    <fieldset>
-        {#each titles as title}
-            <label>
-                <article>
-                    <input type="checkbox" name="title_{title.index}" bind:group={app.titlesSelected} value={title.index}  />
-                    <table>
-                        <thead>
-                            <tr>
-                                <th scope="col">Index</th>
-                                <th scope="col">Duration</th>
-                                <th scope="col">Chapters</th>
-                                <th scope="col">Size (GB)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row">{title.index}</th>
-                                <td>{title.duration}</td>
-                                <td>{title.chapters}</td>
-                                <td>{prettyBytes(title.size_bytes ?? 0, { binary: true })}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </article>
-            </label>
-        {/each}
-    </fieldset>
-{/if}
+    {#if titles.length > 0}
+        <h2>Select Titles to Map</h2>
+        <fieldset>
+            {#each titles as title}
+                <label>
+                    <article>
+                        <input type="checkbox" name="title_{title.index}" bind:group={app.titlesSelected} value={title.index}  />
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Index</th>
+                                    <th scope="col">Duration</th>
+                                    <th scope="col">Chapters</th>
+                                    <th scope="col">Size (GiB)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">{title.index}</th>
+                                    <td>{title.duration}</td>
+                                    <td>{title.chapters}</td>
+                                    <td>{prettyBytes(title.size_bytes ?? 0, { binary: true })}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </article>
+                </label>
+            {/each}
+        </fieldset>
+    {/if}
 {:else}
     <h2>Scanning Disc</h2>
     <progress></progress>
@@ -71,7 +71,7 @@
 
 <style>
     label {
-        width: 100%;
+        width: 100% !important;
         display: flex;
         align-items: center;
         gap: 1rem;

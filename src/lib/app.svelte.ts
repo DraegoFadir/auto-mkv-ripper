@@ -14,16 +14,27 @@ class AppState {
     nextStep: Step = $state<Step>(null);
 
     next = () => {
-        if(this.mediaSelected.length < 1) {
+        if(this.mediaSelected.length < 1 && this.nextStep === "scan") {
+            return;
+        }
+
+        if(this.titlesSelected.length < 1 && this.nextStep === "title-mapping") {
             return;
         }
 
         let route = "";
-        if (this.nextStep !== "scan") {
-            let route = this.nextStep;
+        if (this.nextStep && this.nextStep !== "scan") {
+            route = this.nextStep;
         }
 
         goto(`/${this.mediaType}/${route}`)
+    }
+
+    reset = () => {
+        // Probably need to clear everything back to defaults
+
+        // go back to search page
+        goto("/");
     }
 
     nextDisabled = $derived.by(() => {

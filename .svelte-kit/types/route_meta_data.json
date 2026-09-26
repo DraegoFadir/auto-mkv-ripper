@@ -5,5 +5,8 @@
 	],
 	"/movie": [
 		"src/routes/+layout.ts"
+	],
+	"/movie/title-mapping": [
+		"src/routes/+layout.ts"
 	]
 }

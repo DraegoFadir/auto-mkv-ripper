@@ -10,6 +10,13 @@
 
     onMount(loadSettings);
 
+    $effect(() => {
+        const mediaSelected = app.mediaSelected;
+        if(mediaSelected.length < 1) {
+            app.reset();
+        }
+    });
+
     let { children } = $props();
     let settingsOpen: boolean = $state(false);
 
