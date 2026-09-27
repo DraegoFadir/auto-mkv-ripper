@@ -11,8 +11,24 @@ pub const STORE_KEY: &str = "settings";
 #[serde(default)]
 pub struct Settings {
     pub tmdb_api_key: String,
+    pub tvdb_api_key: String,
+    pub tvdb_api_pin: String,
     pub makemkv_path: String,
-    pub output_directory: String
+    pub output_directory: String,
+    pub sftp_hostname: String,
+    pub sftp_username: String,
+    pub sftp_password: String,
+    pub sftp_movie_path: String,
+    pub sftp_tvshow_path: String,
+    pub sftp_anime_path: String
+}
+
+// Not used righytnow but will be used to store sensitive data more securely than a raw text json
+pub struct PrivateSettings {
+    pub tmdb_api_key: String,
+    pub tvdb_api_key: String,
+    pub tvdb_api_pin: String,
+    pub sftp_password: String,
 }
 
 impl Settings {

@@ -30,6 +30,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'App v__VERSION__'
           releaseDraft: true
+          generateReleaseNotes: true
       - name: Upload portable exe
         if: matrix.platform == 'windows-latest'
         uses: softprops/action-gh-release@v2

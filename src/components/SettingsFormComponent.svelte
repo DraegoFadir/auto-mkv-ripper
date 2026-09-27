@@ -43,15 +43,23 @@
 
 <form bind:this={formRef} onsubmit={save}>
     <fieldset>
-        <legend>API Keys</legend>
+        <legend><h3><strong>API Keys</strong></h3></legend>
         <label>
-            API Key (TMDB)
+            TMDB Key
             <input type="password" name="tmdb_api_key" placeholder="TMDB API Key" bind:value={settings.tmdb_api_key} aria-label="TMDB API Key" />
+        </label>
+        <label>
+            TVDB Key
+            <input type="password" name="tmdb_api_key" placeholder="TMDB API Key" bind:value={settings.tvdb_api_key} aria-label="TVDB API Key" />
+        </label>
+        <label>
+            TVDB Pin (Optional)
+            <input type="password" name="tmdb_api_key" placeholder="TMDB API Key" bind:value={settings.tvdb_api_pin} aria-label="TVDB API Pin" />
         </label>
     </fieldset>
 
     <fieldset>
-        <legend>MakeMKV</legend>
+        <legend><h3><strong>MakeMKV</strong></h3></legend>
         <label>
             MakeMKV Path
             <div role="group">
@@ -69,6 +77,41 @@
                     <Folder size={16} />
                 </button>
             </div>
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend><h3><strong>SFTP</strong></h3></legend>
+        <label>
+            Hostname
+            <input type="text" placeholder="sftp.hostname.com" bind:value={settings.sftp_hostname}>
+        </label>
+        <label>
+            Username
+            <input type="text" placeholder="username" bind:value={settings.sftp_username}>
+        </label>
+        <label>
+            Password
+            <input type="password" placeholder="password" bind:value={settings.sftp_password}>
+        </label>
+    </fieldset>
+    
+    <fieldset>
+        <legend><h3><strong>SFTP Path</strong></h3></legend>
+        <label>
+            Movie
+            <input type="text" placeholder="/path/to/movies" bind:value={settings.sftp_movie_path}>
+            <small>This is the path to your movie libary from the sftp root.</small>
+        </label>
+        <label>
+            TV Show
+            <input type="text" placeholder="/path/to/shows" bind:value={settings.sftp_tvshow_path}>
+            <small>This is the path to your tv show libary from the sftp root.</small>
+        </label>
+        <label>
+            Anime
+            <input type="text" placeholder="/path/to/anime" bind:value={settings.sftp_anime_path}>
+            <small>This is the path to your anime libary from the sftp root.</small>
         </label>
     </fieldset>
 </form>
