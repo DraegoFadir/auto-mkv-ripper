@@ -1,5 +1,6 @@
-use std::{collections::BTreeMap, process::Command};
+use std::{collections::BTreeMap, io::{BufRead, BufReader}, process::{Command, Stdio}};
 use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter};
 use ts_rs::TS;
 
 #[derive(Default, Debug, Serialize, Deserialize, TS)]
@@ -22,6 +23,12 @@ struct DiscInfoRow {
     attr: u32,
     _code: u32,
     value: String
+}
+
+#[derive(Clone, serde::Serialize)]
+struct RipProgress {
+    current: u32,
+    max: u32,
 }
 
 #[tauri::command]
@@ -63,16 +70,51 @@ pub async fn scan_disc() -> Result<Vec<Title>, String> {
     }
 }
 
+
+#[tauri::command]
+pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
+    std::fs::create_dir_all("/home/Draego/Videos/Rips").map_err(|e| e.to_string())?;
+    let mut child: std::process::Child = makemkvcon()
+        .args(["-r", "--progress=-same", "mkv", "disc:0", &(title_index.to_string()), "/home/Draego/Videos/Rips"])
+        .stdout(Stdio::piped())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    let stdout = child.stdout.take().ok_or("no stdout")?;
+
+    // AI Helped with this too
+    // I'm still learning the Rust, don't be too hard on me
+    for line in BufReader::new(stdout).lines() {
+        let line = line.map_err(|e| e.to_string())?;
+        if let Some(rest) = line.strip_prefix("PRGV:") {
+            let parts: Vec<u32> = rest.split(',').filter_map(|p| p.parse().ok()).collect();
+            if let [current, _total, max] = parts[..] {
+                app.emit("rip-progress", RipProgress { current, max }).ok();
+            }
+        } else if line.starts_with("MSG:") {
+            println!("{line}")
+        }
+    }
+
+    let status = child.wait().map_err(|e| e.to_string())?;
+    if !status.success() {
+        return Err(format!("makemkvcon exited with {status}"));
+    }
+
+  Ok(())
+}
+
 // Function was AI Assisted
 fn makemkvcon() -> Command {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("<MakeMKV Path (Will be selected file)>")
+    }
+    
     #[cfg(target_os = "linux")]
     {
         let mut cmd: Command = Command::new("flatpak");
-        cmd.args([
-            "run",
-            "--command=makemkvcon",
-            "com.makemkv.MakeMKV"
-        ]);
+        cmd.args(["run", "--command=makemkvcon", "com.makemkv.MakeMKV"]);
         cmd
     }
 }

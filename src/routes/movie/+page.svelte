@@ -40,7 +40,7 @@
             {#each titles as title}
                 <label>
                     <article>
-                        <input type="checkbox" name="title_{title.index}" bind:group={app.titlesSelected} value={title.index}  />
+                        <input type="checkbox" name="title_{title.index}" bind:group={app.titlesSelected} value={title}  />
                         <table>
                             <thead>
                                 <tr>

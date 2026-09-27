@@ -1,0 +1,1 @@
+export { default as component } from "../../../../src/routes/movie/title-mapping/+page.svelte";

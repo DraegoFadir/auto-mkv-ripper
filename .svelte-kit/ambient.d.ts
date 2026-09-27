@@ -148,7 +148,6 @@ declare module '$env/static/private' {
 	export const NVM_BIN: string;
 	export const BREW_BASH_COMPLETION: string;
 	export const npm_node_execpath: string;
-	export const OLDPWD: string;
 	export const TERM_PROGRAM: string;
 	export const NODE_ENV: string;
 }
@@ -347,7 +346,6 @@ declare module '$env/dynamic/private' {
 		NVM_BIN: string;
 		BREW_BASH_COMPLETION: string;
 		npm_node_execpath: string;
-		OLDPWD: string;
 		TERM_PROGRAM: string;
 		NODE_ENV: string;
 		[key: `PUBLIC_${string}`]: undefined;

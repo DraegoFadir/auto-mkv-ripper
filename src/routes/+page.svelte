@@ -3,6 +3,7 @@
     import type { MovieDetails } from "../bindings/MovieDetails";
     import type { MediaResponse } from "../types/MediaResponse";
     import { app } from "../lib/app.svelte";
+    import MediaCardComponent from "../components/MediaCardComponent.svelte";
 
     app.nextStep = "scan";
 
@@ -33,7 +34,7 @@
                     title: result.original_title,
                     overview: result.overview,
                     release_date: result.release_date,
-                    poster_path: `https://image.tmdb.org/t/p/w500/${result.poster_path}`
+                    poster_path: `https://image.tmdb.org/t/p/w342${result.poster_path}`
                 }
                 return movie;
             default:
@@ -74,16 +75,11 @@
 </form>
 
 {#if media}
-    <article>
-        <header>{media.title} ({media.release_date})</header>
-        <div class="movie-details">
-            <img src="{media.poster_path}" alt="{media.title}" />
-            <p>{media.overview}</p>
-        </div>
-        <footer>
+    <MediaCardComponent media={media}>
+        <footer class="media-footer">
             <button type="button" class="secondary" onclick={selectMedia} disabled={hasMedia}>{hasMedia ? 'Selected' : 'Select'}</button>
         </footer>
-    </article>
+    </MediaCardComponent>
 {/if}
 
 <style>
@@ -94,22 +90,12 @@
         }
     }
 
-    article img {
-        height: 100%;
-        max-height: 250px;
-    }
-
-    article footer {
+    .media-footer {
         text-align: right;
 
         button {
             margin: 0;
         }
-    }
-
-    .movie-details {
-        display: flex;
-        gap: 1.25rem;
     }
 
 </style>
