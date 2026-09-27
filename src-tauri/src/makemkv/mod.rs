@@ -127,10 +127,10 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
 }
 
 // Function was AI Assisted
-fn makemkvcon(path: String) -> Command {
+fn makemkvcon(_path: String) -> Command {
     #[cfg(target_os = "windows")]
     {
-        Command::new(format!("{path}"))
+        Command::new(format!("{_path}"))
     }
     
     #[cfg(target_os = "linux")]
