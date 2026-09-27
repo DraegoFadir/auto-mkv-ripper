@@ -130,7 +130,7 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
 fn makemkvcon(_path: String) -> Command {
     #[cfg(target_os = "windows")]
     {
-        Command::new(format!("{_path}"))
+        Command::new(_path)
     }
     
     #[cfg(target_os = "linux")]
