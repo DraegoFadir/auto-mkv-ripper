@@ -18,8 +18,9 @@
         } catch(e) {
             //TODO: Test with disc I know is bad
             console.log("Error", e)
+        } finally {
+            loading = false;
         }
-        loading = false;
     }
 </script>
 

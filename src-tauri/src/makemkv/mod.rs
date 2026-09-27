@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use ts_rs::TS;
 
+use crate::settings::Settings;
+
 #[derive(Default, Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct Title {
@@ -32,8 +34,15 @@ struct RipProgress {
 }
 
 #[tauri::command]
-pub async fn scan_disc() -> Result<Vec<Title>, String> {
-    let output = makemkvcon()
+pub async fn scan_disc(app: AppHandle) -> Result<Vec<Title>, String> {
+    
+    let settings: Settings = Settings::load(&app)?;
+
+    if settings.makemkv_path.is_empty() {
+        return Err("MakeMKV Path is not set. Add it in Settings.".into());
+    }
+
+    let output = makemkvcon(settings.makemkv_path)
         .args(["-r", "--minlength=3600", "info", "disc:0"])
         .output()
         .map_err(|e: std::io::Error| e.to_string())?;
@@ -73,9 +82,22 @@ pub async fn scan_disc() -> Result<Vec<Title>, String> {
 
 #[tauri::command]
 pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
-    std::fs::create_dir_all("/home/Draego/Videos/Rips").map_err(|e| e.to_string())?;
-    let mut child: std::process::Child = makemkvcon()
-        .args(["-r", "--progress=-same", "mkv", "disc:0", &(title_index.to_string()), "/home/Draego/Videos/Rips"])
+
+    let settings: Settings = Settings::load(&app)?;
+
+    if settings.makemkv_path.is_empty() {
+        return Err("MakeMKV Path is not set. Add it in Settings.".into());
+    }
+
+    if settings.output_directory.is_empty() {
+        return Err("No Output Directory is set. Add it in Settings".into());
+    }
+
+    let output = &settings.output_directory;
+
+    std::fs::create_dir_all(output).map_err(|e| e.to_string())?;
+    let mut child: std::process::Child = makemkvcon(settings.makemkv_path)
+        .args(["-r", "--progress=-same", "mkv", "disc:0", &(title_index.to_string()), output])
         .stdout(Stdio::piped())
         .spawn()
         .map_err(|e| e.to_string())?;
@@ -105,10 +127,10 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
 }
 
 // Function was AI Assisted
-fn makemkvcon() -> Command {
+fn makemkvcon(path: String) -> Command {
     #[cfg(target_os = "windows")]
     {
-        Command::new("<MakeMKV Path (Will be selected file)>")
+        Command::new(format!("{path}"))
     }
     
     #[cfg(target_os = "linux")]

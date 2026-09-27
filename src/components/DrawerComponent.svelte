@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
 
-    let {open = $bindable(false), title, children}: {open?: boolean, title: string, children: Snippet} = $props()
+    let {open = $bindable(false), title, children, footer}: {open?: boolean, title: string, children: Snippet, footer?: Snippet} = $props()
 
     let dialog: HTMLDialogElement;
 
@@ -26,6 +26,10 @@
             <strong>{title}</strong>
         </header>
         {@render children()}
+
+        {#if footer}
+            {@render footer()}
+        {/if}
     </article>
 </dialog>
 
@@ -36,8 +40,10 @@
     }
 
     .drawer article {
+        display: flex;
+        flex-direction: column;
         margin: 0;
-        width: min(400px, 90vw);
+        width: min(600px, 90vw);
         height: 100%;
         max-height: none;
         border-radius: 0;

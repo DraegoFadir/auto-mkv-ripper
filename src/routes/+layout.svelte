@@ -1,12 +1,16 @@
 <script lang="ts">
     import "@picocss/pico/css/pico.indigo.min.css"
     import {onMount} from "svelte";
-    import { Settings } from "@lucide/svelte";
+    import { Save, Settings } from "@lucide/svelte";
 
     import DrawerComponent from "../components/DrawerComponent.svelte";
     import SettingsFormComponent from "../components/SettingsFormComponent.svelte";
-    import { loadSettings } from "../lib/settings.svelte";
+    import { loadSettings, settings } from "../lib/settings.svelte";
     import { app } from "../lib/app.svelte";
+
+    interface FormHandle {
+        submit: () => void;
+    }
 
     onMount(loadSettings);
 
@@ -19,8 +23,8 @@
 
     let { children } = $props();
     let settingsOpen: boolean = $state(false);
-
-    // let media: MediaResponse | null = $state(null);
+    let settingsForm: FormHandle;
+    let saving: boolean = $state(false);
 
     function openSettings(event: any) {
         event.preventDefault();
@@ -80,13 +84,23 @@
 </footer>
 
 <DrawerComponent bind:open={settingsOpen} title="Settings">
-    <SettingsFormComponent />
+    <SettingsFormComponent bind:saving bind:this={settingsForm} />
+    {#snippet footer()}
+        <button class="save-btn" type="button" onclick={() => settingsForm.submit()} disabled={saving} aria-busy={saving}>
+            {#if !saving} Save <Save size={24} /> {/if}
+        </button>
+    {/snippet}
 </DrawerComponent>
 
 <style>
     h1 {
         margin-bottom: 0;
     }
+
+    .save-btn {
+        margin: 0;
+    }
+
     :global(body) {
         display: flex;
         flex-direction: column;

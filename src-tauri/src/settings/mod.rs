@@ -10,7 +10,9 @@ pub const STORE_KEY: &str = "settings";
 #[ts(export)]
 #[serde(default)]
 pub struct Settings {
-    pub tmdb_api_key: String
+    pub tmdb_api_key: String,
+    pub makemkv_path: String,
+    pub output_directory: String
 }
 
 impl Settings {
