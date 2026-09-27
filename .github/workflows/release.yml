@@ -27,3 +27,10 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'App v__VERSION__'
           releaseDraft: true
+      - name: Upload portable exe
+        if: matrix.platform == 'windows-latest'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: src-tauri/target/release/auto-mkv-ripper.exe
+          draft: true
