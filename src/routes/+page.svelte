@@ -74,16 +74,81 @@
     <button type="submit" aria-label="{loading ? "Searching" : "Search"}" aria-busy="{loading}">Search</button>
 </form>
 
-{#if media}
-    <MediaCardComponent media={media}>
-        <footer class="media-footer">
-            <button type="button" class="secondary" onclick={selectMedia} disabled={hasMedia}>{hasMedia ? 'Selected' : 'Select'}</button>
-        </footer>
-    </MediaCardComponent>
-{/if}
+<div class="flex-row">
+    <article>
+        <header>
+            <h2>Search Results</h2>
+        </header>
+        <main>
+            {#if media && !app.mediaSelected.some(m => m.id === media.id)}
+                <label class="media-select-label">
+                    <MediaCardComponent media={media}>
+                        <input type="checkbox" name={`${media.id}`} bind:group={app.mediaSelected} value={media} />
+                    </MediaCardComponent>
+                </label>
+            {:else}
+                <hgroup>
+                    <h3>No Results Found</h3>
+                    <p>Please try again or check your already selected media</p>
+                </hgroup>
+            {/if}
+        </main>
+    </article>
+
+
+    <article>
+        <header>
+            <h2>Selected Media</h2>
+            {app.mediaSelected.length} Selected
+        </header>
+
+        {#if app.mediaSelected.length > 0}
+            {#each app.mediaSelected as m (m.id)}
+                <label class="media-select-label">
+                    <MediaCardComponent media={m}>
+                        <input type="checkbox" name={`${m.id}`} bind:group={app.mediaSelected} value={m} />
+                    </MediaCardComponent>
+                </label>
+            {/each}
+        {:else}
+            <hgroup>
+                <h3>No Media Selected</h3>
+                <p>Please search for media and add it from the select list</p>
+            </hgroup>
+        {/if}
+
+    </article>
+    
+</div>
+
 
 <style>
 
+    .flex-row {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .flex-row > article {
+        flex: 1;
+        min-width: 0;
+    }
+
+    article header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    article h2 {
+        margin: 0;
+    }
+
+    .media-select-label {
+        width: 100%;
+    }
+    
     form {
         select {
             width: 25%;

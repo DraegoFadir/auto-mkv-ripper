@@ -8,23 +8,25 @@
 
 
 <article {...rest}>
-    <header>{media.title} ({media.release_date.getFullYear()})</header>
     <div class="movie-details">
         <img src="{media.poster_path}" alt="{media.title}" />
-        <p>{media.overview}</p>
+        {media.title} ({media.release_date.getFullYear()})
+        <div>
+            {@render children?.()}
+        </div>
     </div>
-    {@render children?.()}
 </article>
 
 <style>
     article img {
         aspect-ratio: 2/3;
         height: 100%;
-        max-height: 200px;
+        max-height: 75px;
     }
 
     .movie-details {
         display: flex;
-        gap: 1.25rem;
+        align-items: center;
+        justify-content: space-between;
     }
 </style>

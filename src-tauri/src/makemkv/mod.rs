@@ -39,6 +39,8 @@ pub async fn scan_disc(app: AppHandle) -> Result<Vec<Title>, String> {
     
     let settings: Settings = Settings::load(&app)?;
 
+    // This is not necessary for linux which runs off flatpak
+    #[cfg(target_os = "windows")] 
     if settings.makemkv_path.is_empty() {
         return Err("MakeMKV Path is not set. Add it in Settings.".into());
     }
@@ -87,6 +89,7 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
 
     let settings: Settings = Settings::load(&app)?;
 
+    #[cfg(target_os = "windows")]
     if settings.makemkv_path.is_empty() {
         return Err("MakeMKV Path is not set. Add it in Settings.".into());
     }
