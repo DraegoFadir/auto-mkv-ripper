@@ -40,7 +40,7 @@
         </ul>
         <ul>
             <li>
-                <a href="#" aria-label="Settings" onclick={openSettings}>
+                <a href="/" aria-label="Settings" onclick={openSettings}>
                     <Settings size={50} />
                 </a>
             </li>

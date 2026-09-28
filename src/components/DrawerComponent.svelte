@@ -22,8 +22,8 @@
     {#if open}
         <article transition:fly={{ x: 600, duration: 500 }} onoutroend={() => {if (!open) dialog.close()}}>
             <header>
-                <button aria-label="Close" rel="prev" onclick={() => (open = false)}></button>
                 <h2><strong>{title}</strong></h2>
+                <button aria-label="Close" class="close" onclick={() => (open = false)}></button>
             </header>
             
             <main>
@@ -51,6 +51,12 @@
         flex-direction: column;
         width: min(600px, 90vw);
         height: 100%;
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
         main {
             flex: 1;

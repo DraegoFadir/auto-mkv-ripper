@@ -33,7 +33,7 @@
                     id: result.id,
                     title: result.original_title,
                     overview: result.overview,
-                    release_date: result.release_date,
+                    release_date: new Date(result.release_date),
                     poster_path: `https://image.tmdb.org/t/p/w342${result.poster_path}`
                 }
                 return movie;

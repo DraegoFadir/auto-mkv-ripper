@@ -1,10 +1,11 @@
 <script lang="ts">
     import { app } from "$lib/app.svelte";
+    import type { Title } from "../../../bindings/Title";
     import MediaCardComponent from "../../../components/MediaCardComponent.svelte";
 
     app.nextStep = "rip";
 
-    function mapTitle(index: number, id: number) {
+    function mapTitle(title: Title, id: number) {
         let movie = getMovieData(id);
         if(!movie) {
             return;
@@ -14,14 +15,14 @@
         if(existingMediaIndex >= 0) {
 
             // Movie already belongs to this index, return
-            if(app.titlesMapped[existingMediaIndex].index === index) {
+            if(app.titlesMapped[existingMediaIndex].title.index === title.index) {
                 return;
             }
 
             app.titlesMapped.splice(existingMediaIndex, 1);
         }
 
-        let existingIndex = app.titlesMapped.findIndex((x) => x.index === index);
+        let existingIndex = app.titlesMapped.findIndex((x) => x.title.index === title.index);
         if(existingIndex >= 0) {
 
             // If same index, same movie, return
@@ -35,13 +36,13 @@
         }
 
         app.titlesMapped.push({
-            index,
+            title,
             media: movie
         })
     }
 
     function getMappedTitle(index: number) {
-        return app.titlesMapped.find((x) => x.index === index);
+        return app.titlesMapped.find((x) => x.title.index === index);
     }
 
     function getMappedMedia(id: number) {
@@ -70,7 +71,7 @@
             <article ondrop={(e) => {
                 e.preventDefault();
                 const id = Number(e.dataTransfer?.getData('text/plain'));
-                mapTitle(title.index, id)
+                mapTitle(title, id)
             }} ondragover={(e) => e.preventDefault()}>
                 <header>Title: {title.index}</header>
                 {#if getMappedTitle(title.index)}

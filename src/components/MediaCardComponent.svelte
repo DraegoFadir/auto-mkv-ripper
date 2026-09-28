@@ -8,7 +8,7 @@
 
 
 <article {...rest}>
-    <header>{media.title} ({media.release_date})</header>
+    <header>{media.title} ({media.release_date.getFullYear()})</header>
     <div class="movie-details">
         <img src="{media.poster_path}" alt="{media.title}" />
         <p>{media.overview}</p>

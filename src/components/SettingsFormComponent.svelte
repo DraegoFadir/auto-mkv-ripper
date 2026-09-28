@@ -2,6 +2,7 @@
     import { open } from '@tauri-apps/plugin-dialog'
     import { Folder, File } from '@lucide/svelte';
     import {settings, saveSettings} from "../lib/settings.svelte";
+    import { app } from "$lib/app.svelte";
 
     let { saving = $bindable(false) }: {saving: boolean} = $props();
     let status = $state("");
@@ -27,7 +28,6 @@
     async function folder(setter: (path: string) => void) {
         const path = await open({ directory: true });
         if (path) {
-            console.log(path)
             setter(path);
         }
     }
@@ -35,7 +35,6 @@
     async function file(setter: (path: string) => void) {
         const path = await open();
         if (path) {
-            console.log(path)
             setter(path);
         }
     }

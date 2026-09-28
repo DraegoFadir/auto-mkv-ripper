@@ -15,7 +15,8 @@ pub struct Title {
     #[ts(type = "number | null")]
     size_bytes: Option<u64>,
     playlist: Option<String>,
-    segment_map: Option<String>
+    segment_map: Option<String>,
+    file_name: Option<String>
 }
 
 
@@ -71,6 +72,7 @@ pub async fn scan_disc(app: AppHandle) -> Result<Vec<Title>, String> {
                 11 => t.size_bytes = row.value.parse().ok(),
                 16 => t.playlist = Some(row.value),
                 26 => t.segment_map = Some(row.value),
+                27 => t.file_name = Some(row.value),
                 _ => {}
             }
         }
@@ -123,7 +125,7 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
         return Err(format!("makemkvcon exited with {status}"));
     }
 
-  Ok(())
+    Ok(())
 }
 
 // Function was AI Assisted

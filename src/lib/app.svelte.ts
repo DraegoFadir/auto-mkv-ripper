@@ -12,7 +12,7 @@ export type Progress = {
 }
 
 export type TitleMap = {
-    index: number;
+    title: Title;
     media: MediaResponse;
     ripProgress?: Progress;
     sftpProgress?: Progress;
@@ -31,15 +31,13 @@ class AppState {
             return;
         }
 
-        console.log(this.titlesSelected);
-
         if(this.titlesSelected.length < 1 && this.nextStep === "title-mapping") {
             return;
         }
 
         if(this.titlesSelected.length === 1 && this.nextStep === "title-mapping") {
             this.titlesMapped.push({
-                index: this.titlesSelected[0].index,
+                title: this.titlesSelected[0],
                 media: this.mediaSelected[0]
             });
             this.nextStep = "rip";

@@ -3,5 +3,5 @@ export type MediaResponse = {
     title: string,
     overview: string,
     poster_path: string,
-    release_date: string
+    release_date: Date
 }
