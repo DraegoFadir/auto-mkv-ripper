@@ -5,7 +5,7 @@
     import type { Title } from "../../bindings/Title";
     import prettyBytes from "pretty-bytes";
 
-    app.nextStep = "title-mapping";
+    app.state.nextStep = "title-mapping";
 
     let loading: boolean = $state(false);
     let titles: Title[] = $state([])
@@ -29,9 +29,9 @@
 {#if !loading}
     <h2>Select Disc Type</h2>
     <div role="group">
-        <button class={ app.discType === "dvd" ? "primary" : "outline" } onclick={() => app.discType = "dvd"} disabled={loading}>DVD</button>
-        <button class={ app.discType === "bluray" ? "primary" : "outline" } onclick={() => app.discType = "bluray"} disabled={loading}>BluRay</button>
-        <button class={ app.discType === "4k" ? "primary" : "outline" } onclick={() => app.discType = "4k"} disabled={loading}>4k UltraHD</button>
+        <button class={ app.state.discType === "dvd" ? "primary" : "outline" } onclick={() => app.state.discType = "dvd"} disabled={loading}>DVD</button>
+        <button class={ app.state.discType === "bluray" ? "primary" : "outline" } onclick={() => app.state.discType = "bluray"} disabled={loading}>BluRay</button>
+        <button class={ app.state.discType === "4k" ? "primary" : "outline" } onclick={() => app.state.discType = "4k"} disabled={loading}>4k UltraHD</button>
     </div>
     <input type="button" class="secondary" value="Start Scan" onclick={startScan} />
 
@@ -41,7 +41,7 @@
             {#each titles as title}
                 <label>
                     <article>
-                        <input type="checkbox" name="title_{title.index}" bind:group={app.titlesSelected} value={title}  />
+                        <input type="checkbox" name="title_{title.index}" bind:group={app.state.titlesSelected} value={title}  />
                         <table>
                             <thead>
                                 <tr>

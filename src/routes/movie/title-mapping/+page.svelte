@@ -3,7 +3,7 @@
     import type { Title } from "../../../bindings/Title";
     import MediaCardComponent from "../../../components/MediaCardComponent.svelte";
 
-    app.nextStep = "rip";
+    app.state.nextStep = "rip";
 
     function mapTitle(title: Title, id: number) {
         let movie = getMovieData(id);
@@ -11,46 +11,46 @@
             return;
         }
 
-        let existingMediaIndex = app.titlesMapped.findIndex((x) => x.media.id === id);
+        let existingMediaIndex = app.state.titlesMapped.findIndex((x) => x.media.id === id);
         if(existingMediaIndex >= 0) {
 
             // Movie already belongs to this index, return
-            if(app.titlesMapped[existingMediaIndex].title.index === title.index) {
+            if(app.state.titlesMapped[existingMediaIndex].title.index === title.index) {
                 return;
             }
 
-            app.titlesMapped.splice(existingMediaIndex, 1);
+            app.state.titlesMapped.splice(existingMediaIndex, 1);
         }
 
-        let existingIndex = app.titlesMapped.findIndex((x) => x.title.index === title.index);
+        let existingIndex = app.state.titlesMapped.findIndex((x) => x.title.index === title.index);
         if(existingIndex >= 0) {
 
             // If same index, same movie, return
-            if(app.titlesMapped[existingIndex].media.id === movie.id) {
+            if(app.state.titlesMapped[existingIndex].media.id === movie.id) {
                 return;
             }
 
             // If same index, different movie, swap & return
-            app.titlesMapped[existingIndex].media = movie;
+            app.state.titlesMapped[existingIndex].media = movie;
             return;
         }
 
-        app.titlesMapped.push({
+        app.state.titlesMapped.push({
             title,
             media: movie
         })
     }
 
     function getMappedTitle(index: number) {
-        return app.titlesMapped.find((x) => x.title.index === index);
+        return app.state.titlesMapped.find((x) => x.title.index === index);
     }
 
     function getMappedMedia(id: number) {
-        return app.titlesMapped.find((x) => x.media.id === id);
+        return app.state.titlesMapped.find((x) => x.media.id === id);
     }
 
     function getMovieData(id: number) {
-        return app.mediaSelected.find((x) => x.id === id);
+        return app.state.mediaSelected.find((x) => x.id === id);
     }
 
 </script>
@@ -59,7 +59,7 @@
 <div class="row">
     <article class="column-half">
         <header>Selected Movies</header>
-        {#each app.mediaSelected as movie(movie.id)}
+        {#each app.state.mediaSelected as movie(movie.id)}
             {#if !getMappedMedia(movie.id)}
                 <MediaCardComponent media={movie} draggable ondragstart={(e) => e.dataTransfer?.setData('text/plain', String(movie.id))} />
             {/if}
@@ -67,7 +67,7 @@
     </article>
 
     <div class="col grow">
-        {#each app.titlesSelected as title(title.index)}
+        {#each app.state.titlesSelected as title(title.index)}
             <article ondrop={(e) => {
                 e.preventDefault();
                 const id = Number(e.dataTransfer?.getData('text/plain'));

@@ -14,13 +14,6 @@
 
     onMount(loadSettings);
 
-    $effect(() => {
-        const mediaSelected = app.mediaSelected;
-        if(mediaSelected.length < 1) {
-            app.reset();
-        }
-    });
-
     let { children } = $props();
     let settingsOpen: boolean = $state(false);
     let settingsForm: FormHandle;
@@ -55,32 +48,7 @@
 </main>
 
 <footer class="container-fluid">
-        <nav class="container">
-
-            {#if app.nextStep == "scan" && app.mediaSelected.length > 0}
-                <ul>
-                    <li><strong>Media Selected: ({app.mediaSelected.length})</strong></li>
-                </ul>
-            {:else if app.nextStep == "scan"}
-                <ul>
-                    <li><strong>Please select media to continue</strong></li>
-                </ul>
-            {/if}
-
-            {#if app.nextStep == "title-mapping" && app.titlesSelected.length > 0}
-                <ul>
-                    <li><strong>Titles Selected: ({app.titlesSelected.length})</strong></li>
-                </ul>
-            {:else if app.nextStep == "title-mapping"}
-                <ul>
-                    <li><strong>Please select title to continue</strong></li>
-                </ul>
-            {/if}
-
-            <ul>
-                <li><button disabled={app.nextDisabled} onclick={() => app.next()}>Next</button></li>
-            </ul>
-        </nav>
+    <button disabled={app.nextDisabled} onclick={() => app.next()}>{app.getNextString()}</button>
 </footer>
 
 <DrawerComponent bind:open={settingsOpen} title="Settings">
@@ -100,6 +68,10 @@
     .save-btn {
         margin: 0;
         width: 100%;
+    }
+
+    footer {
+        text-align: end;
     }
 
     :global(body) {

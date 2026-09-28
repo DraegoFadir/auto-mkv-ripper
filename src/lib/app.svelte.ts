@@ -4,7 +4,7 @@ import type { MediaResponse } from "../types/MediaResponse";
 
 export type MediaType = "movie" | "tv-show" | "anime"
 export type DiscType = "dvd" | "bluray" | "4k"
-export type Step = "scan" | "title-mapping" | "rip" | null
+export type Step = "scan" | "title-mapping" | "rip" | "finish" | null
 
 export type Progress = {
     current: number,
@@ -18,52 +18,78 @@ export type TitleMap = {
     sftpProgress?: Progress;
 }
 
+type AppStateType = {
+    mediaType: MediaType,
+    discType: DiscType
+    mediaSelected: MediaResponse[]
+    titlesSelected: Title[]
+    titlesMapped: TitleMap[]
+    nextStep: Step
+}
+
+const defaults = (): AppStateType => ({
+    mediaType: "movie",
+    discType: "dvd",
+    mediaSelected: [],
+    titlesSelected: [],
+    titlesMapped: [],
+    nextStep: null
+}); 
+
 class AppState {
-    mediaType: MediaType = $state<MediaType>("movie");
-    discType: DiscType = $state<DiscType>("dvd");
-    mediaSelected: MediaResponse[] = $state<MediaResponse[]>([]);
-    titlesSelected: Title[] = $state<Title[]>([]);
-    titlesMapped: TitleMap[] = $state<TitleMap[]>([]);
-    nextStep: Step = $state<Step>(null);
+    state: AppStateType = $state<AppStateType>(defaults());
 
+    getNextString = () => {
+        switch(this.state.nextStep) {
+            case "scan":
+                return "Continue to Disc Scan"
+            case "title-mapping":
+                return "Continue to Title Mapping"
+            case "rip":
+                return "Continue to Rip & Upload"
+            case "finish":
+                return "Finish"
+            default:
+                return "Continue"
+        }
+    }
+ 
     next = () => {
-        if(this.mediaSelected.length < 1 && this.nextStep === "scan") {
+        if(this.state.mediaSelected.length < 1 && this.state.nextStep === "scan") {
             return;
         }
 
-        if(this.titlesSelected.length < 1 && this.nextStep === "title-mapping") {
+        if(this.state.titlesSelected.length < 1 && this.state.nextStep === "title-mapping") {
             return;
         }
 
-        if(this.titlesSelected.length === 1 && this.nextStep === "title-mapping") {
-            this.titlesMapped.push({
-                title: this.titlesSelected[0],
-                media: this.mediaSelected[0]
+        if(this.state.titlesSelected.length === 1 && this.state.nextStep === "title-mapping") {
+            this.state.titlesMapped.push({
+                title: this.state.titlesSelected[0],
+                media: this.state.mediaSelected[0]
             });
-            this.nextStep = "rip";
+            this.state.nextStep = "rip";
         }
 
         let route = "";
-        if (this.nextStep && this.nextStep !== "scan") {
-            route = this.nextStep;
+        if (this.state.nextStep && this.state.nextStep !== "scan") {
+            route = this.state.nextStep;
+        }
+        if(this.state.nextStep && this.state.nextStep === "finish") {
+            return this.reset();
         }
 
-        goto(`/${this.mediaType}/${route}`)
+        goto(`/${this.state.mediaType}/${route}`)
     }
 
-    reset = () => {
-        // Probably need to clear everything back to defaults
-
-        // go back to search page
-        goto("/");
-    }
+    reset = () => { this.state = defaults(); goto("/"); }
 
     nextDisabled = $derived.by(() => {
-        if(this.mediaSelected.length < 1 && this.nextStep == "scan") {
+        if(this.state.mediaSelected.length < 1 && this.state.nextStep == "scan") {
             return true;
         }
 
-        if(this.titlesSelected.length < 1 && this.nextStep == "title-mapping") {
+        if(this.state.titlesSelected.length < 1 && this.state.nextStep == "title-mapping") {
             return true;
         }
 

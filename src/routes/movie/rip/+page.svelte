@@ -7,10 +7,12 @@
     import { settings } from "$lib/settings.svelte";
     import type { Sftp } from "../../../bindings/Sftp";
 
+    app.state.nextStep = "finish";
+
     onMount(beginRip)
 
     async function beginRip () {
-        for (const title of app.titlesMapped) {
+        for (const title of app.state.titlesMapped) {
             title.ripProgress = { current: 0, max: 1};
             const unlisten = await listen<Progress>("rip-progress", (e) => {
                 title.ripProgress = e.payload;
@@ -35,7 +37,7 @@
             "4k": "2160p"
         }
 
-        const quality = quality_map[app.discType];
+        const quality = quality_map[app.state.discType];
 
         const sftp: Sftp = {
             local_path: `${settings.output_directory}/${map.title.file_name}`,
@@ -46,7 +48,7 @@
         // If you find this setting, cool
         // This is not going to be officially documented but was made to fit how i upload
         if(settings.sftp_movie_path.includes("~split")) {
-            sftp.remote_path = sftp.remote_path.replace("~split", `/_${app.discType}`)
+            sftp.remote_path = sftp.remote_path.replace("~split", `/_${app.state.discType}`)
         }
 
         const unlisten = await listen<Progress>("sftp-progress", (e) => {
@@ -61,7 +63,7 @@
 
 <h1>Rip</h1>
 
-{#each app.titlesMapped as title(title.media.id)}
+{#each app.state.titlesMapped as title(title.media.id)}
     <MediaCardComponent media={title.media}>
         Ripping
         <progress value={title.ripProgress?.current ?? 0} max={title.ripProgress?.max || 1}></progress>

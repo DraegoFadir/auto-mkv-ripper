@@ -5,14 +5,14 @@
     import { app } from "../lib/app.svelte";
     import MediaCardComponent from "../components/MediaCardComponent.svelte";
 
-    app.nextStep = "scan";
+    app.state.nextStep = "scan";
 
     let searchId: string = $state("");
     let loading: boolean = $state(false);
     let result: MovieDetails | null = $state(null)
 
     let hintText: string = $derived.by(() => {
-        switch(app.mediaType) {
+        switch(app.state.mediaType) {
             case 'movie': 
                 return 'TMDB Movie ID';
             case 'tv-show': 
@@ -27,7 +27,7 @@
         if(!result)
             return null;
 
-        switch(app.mediaType) {
+        switch(app.state.mediaType) {
             case 'movie':
                 let movie: MediaResponse = {
                     id: result.id,
@@ -42,7 +42,7 @@
         }
     });
 
-    let hasMedia: boolean = $derived(app.mediaSelected.findIndex((x) => x.id === media?.id) >= 0)
+    let hasMedia: boolean = $derived(app.state.mediaSelected.findIndex((x) => x.id === media?.id) >= 0)
 
     async function getMovie(event: SubmitEvent) {
         event.preventDefault();
@@ -59,13 +59,13 @@
 
     function selectMedia() {
         if(media && !hasMedia) {
-            app.mediaSelected.push(media)
+            app.state.mediaSelected.push(media)
         }
     }
 </script>
 
 <form role="search" onsubmit={getMovie}>
-    <select name="media-format" aria-label="Select Media Format" required bind:value={app.mediaType}>
+    <select name="media-format" aria-label="Select Media Format" required bind:value={app.state.mediaType}>
         <option value="movie">Movie</option>
         <option value="tv-show">TV Show</option>
         <option value="anime">Anime</option>
@@ -80,10 +80,10 @@
             <h2>Search Results</h2>
         </header>
         <main>
-            {#if media && !app.mediaSelected.some(m => m.id === media.id)}
+            {#if media && !app.state.mediaSelected.some(m => m.id === media.id)}
                 <label class="media-select-label">
                     <MediaCardComponent media={media}>
-                        <input type="checkbox" name={`${media.id}`} bind:group={app.mediaSelected} value={media} />
+                        <input type="checkbox" name={`${media.id}`} bind:group={app.state.mediaSelected} value={media} />
                     </MediaCardComponent>
                 </label>
             {:else}
@@ -99,14 +99,14 @@
     <article>
         <header>
             <h2>Selected Media</h2>
-            {app.mediaSelected.length} Selected
+            {app.state.mediaSelected.length} Selected
         </header>
 
-        {#if app.mediaSelected.length > 0}
-            {#each app.mediaSelected as m (m.id)}
+        {#if app.state.mediaSelected.length > 0}
+            {#each app.state.mediaSelected as m (m.id)}
                 <label class="media-select-label">
                     <MediaCardComponent media={m}>
-                        <input type="checkbox" name={`${m.id}`} bind:group={app.mediaSelected} value={m} />
+                        <input type="checkbox" name={`${m.id}`} bind:group={app.state.mediaSelected} value={m} />
                     </MediaCardComponent>
                 </label>
             {/each}
