@@ -135,7 +135,11 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
 fn makemkvcon(_path: String) -> Command {
     #[cfg(target_os = "windows")]
     {
-        Command::new(_path)
+        use std::os::windows::process::CommandExt;
+
+        let mut cmd: Command = Command::new(_path);
+        cmd.creation_flags(0x08000000);
+        cmd
     }
     
     #[cfg(target_os = "linux")]

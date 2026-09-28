@@ -21,7 +21,7 @@
     article img {
         aspect-ratio: 2/3;
         height: 100%;
-        max-height: 75px;
+        max-height: 125px;
     }
 
     .movie-details {
