@@ -102,7 +102,7 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
 
     std::fs::create_dir_all(output).map_err(|e| e.to_string())?;
     let mut child: std::process::Child = makemkvcon(settings.makemkv_path)
-        .args(["-r", "--progress=-same", "mkv", "disc:0", &(title_index.to_string()), output])
+        .args(["-r", "--progress=-same", "--minlength=3600", "mkv", "disc:0", &(title_index.to_string()), output])
         .stdout(Stdio::piped())
         .spawn()
         .map_err(|e| e.to_string())?;
