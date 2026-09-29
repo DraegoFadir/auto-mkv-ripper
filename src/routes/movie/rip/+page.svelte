@@ -2,10 +2,10 @@
     import { app, type DiscType, type Progress, type TitleMap } from "$lib/app.svelte";
     import { onMount } from "svelte";
     import MediaCardComponent from "../../../components/MediaCardComponent.svelte";
-    import { invoke } from "@tauri-apps/api/core";
     import { listen } from "@tauri-apps/api/event";
     import { settings } from "$lib/settings.svelte";
     import type { Sftp } from "../../../bindings/Sftp";
+    import { rust } from "$lib/rust.svelte";
 
     app.state.nextStep = "finish";
 
@@ -18,7 +18,7 @@
                 title.ripProgress = e.payload;
             });
 
-            await invoke("rip_disc", { titleIndex: title.title.index })
+            await rust("rip_disc", { titleIndex: title.title.index })
             unlisten();
 
             beginSftp(title);
@@ -55,7 +55,7 @@
             map.sftpProgress = e.payload;
         });
 
-        await invoke("send_sftp", { sftp })
+        await rust("send_sftp", { sftp })
         unlisten();
     }
 

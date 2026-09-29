@@ -47,6 +47,12 @@
 
 </main>
 
+<div class="container" class:alert={app.state.alert} class:error={app.state.alert?.type == 'error'} class:success={app.state.alert?.type == 'success'}>
+    {#if app.state.alert}
+        {app.state.alert.message}
+    {/if}
+</div>
+
 <footer class="container-fluid">
     <button disabled={app.nextDisabled} onclick={() => app.next()}>{app.getNextString()}</button>
 </footer>
@@ -74,10 +80,31 @@
         text-align: end;
     }
 
+    .alert {
+        text-align: left;
+        width: fit-content;
+        max-width: 40%;
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
+        border-radius: var(--pico-border-radius);
+        padding: var(--pico-form-element-spacing-vertical) var(--pico-form-element-spacing-horizontal);  
+        color: var(--pico-color);
+    }
+
+    .alert.error {
+        border: var(--pico-border-width) solid var(--pico-form-element-invalid-border-color);
+        background-color: color-mix(in srgb, var(--pico-form-element-invalid-border-color) 35%, var(--pico-card-background-color));
+    }
+
+    .alert.success {  
+        border: var(--pico-border-width) solid var(--pico-form-element-valid-border-color);
+        background-color: color-mix(in srgb, var(--pico-form-element-valid-border-color) 35%, var(--pico-card-background-color));  
+    }
+
     :global(body) {
         display: flex;
         flex-direction: column;
         height: 100vh;
+        gap: .5rem;
     }
 
     :global(body > main) {
@@ -95,4 +122,13 @@
         background: var(--pico-card-background-color);
         border-top: 1px solid var(--pico-muted-border-color);
     }
+
+    :global(.success) {
+        color: var(--pico-ins-color);
+    }
+
+    :global(.danger) {
+        color: var(--pico-del-color);
+    }
+
 </style>

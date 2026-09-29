@@ -1,9 +1,8 @@
 <script lang="ts">    
-    import { invoke } from "@tauri-apps/api/core";
-
     import { app } from "$lib/app.svelte";
     import type { Title } from "../../bindings/Title";
     import prettyBytes from "pretty-bytes";
+    import { rust } from "$lib/rust.svelte";
 
     app.state.nextStep = "title-mapping";
 
@@ -12,15 +11,14 @@
 
     async function startScan() {
         loading = true;
-        try {
-            let result: Title[] = await invoke("scan_disc", { })
+
+        const result = await rust<Title[]>("scan_disc", { });
+
+        if(result) {
             titles = result;
-        } catch(e) {
-            //TODO: Test with disc I know is bad
-            console.log("Error", e)
-        } finally {
-            loading = false;
         }
+        
+        loading = false;
     }
 </script>
 
