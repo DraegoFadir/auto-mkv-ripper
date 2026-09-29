@@ -1,4 +1,6 @@
 use std::{collections::BTreeMap, io::{BufRead, BufReader}, process::{Command, Stdio}};
+use anyhow::Context;
+use anyhow_tauri::{IntoTAResult, TAResult};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use ts_rs::TS;
@@ -35,20 +37,20 @@ struct RipProgress {
 }
 
 #[tauri::command]
-pub async fn scan_disc(app: AppHandle) -> Result<Vec<Title>, String> {
+pub async fn scan_disc(app: AppHandle) -> TAResult<Vec<Title>> {
     
     let settings: Settings = Settings::load(&app)?;
 
     // This is not necessary for linux which runs off flatpak
     #[cfg(target_os = "windows")] 
     if settings.makemkv_path.is_empty() {
-        return Err("MakeMKV Path is not set. Add it in Settings.".into());
+        anyhow_tauri::bail!("MakeMKV Path is not set. Add it in Settings.");
     }
 
     let output = makemkvcon(settings.makemkv_path)
         .args(["-r", "--minlength=3600", "info", "disc:0"])
         .output()
-        .map_err(|e: std::io::Error| e.to_string())?;
+        .into_ta_result()?;
 
     // This block was created with assistance of AI :(
     // I am a failure
@@ -62,7 +64,7 @@ pub async fn scan_disc(app: AppHandle) -> Result<Vec<Title>, String> {
         let mut titles: BTreeMap<u32, Title> = BTreeMap::new();
 
         for row in reader.deserialize::<DiscInfoRow>() {
-            let row: DiscInfoRow = row.map_err(|e| e.to_string())?;
+            let row: DiscInfoRow = row.into_ta_result()?;
             let t: &mut Title = titles
                 .entry(row.title)
                 .or_insert_with(|| Title {index: row.title, ..Default::default() });
@@ -85,34 +87,34 @@ pub async fn scan_disc(app: AppHandle) -> Result<Vec<Title>, String> {
 
 
 #[tauri::command]
-pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
+pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<()> {
 
     let settings: Settings = Settings::load(&app)?;
 
     #[cfg(target_os = "windows")]
     if settings.makemkv_path.is_empty() {
-        return Err("MakeMKV Path is not set. Add it in Settings.".into());
+        anyhow_tauri::bail!("MakeMKV Path is not set. Add it in Settings.");
     }
 
     if settings.output_directory.is_empty() {
-        return Err("No Output Directory is set. Add it in Settings".into());
+        anyhow_tauri::bail!("No Output Directory is set. Add it in Settings.");
     }
 
     let output = &settings.output_directory;
 
-    std::fs::create_dir_all(output).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(output).into_ta_result()?;
     let mut child: std::process::Child = makemkvcon(settings.makemkv_path)
         .args(["-r", "--progress=-same", "--minlength=3600", "mkv", "disc:0", &(title_index.to_string()), output])
         .stdout(Stdio::piped())
         .spawn()
-        .map_err(|e| e.to_string())?;
+        .into_ta_result()?;
 
-    let stdout = child.stdout.take().ok_or("no stdout")?;
+    let stdout = child.stdout.take().context("no stdout")?;
 
     // AI Helped with this too
     // I'm still learning the Rust, don't be too hard on me
     for line in BufReader::new(stdout).lines() {
-        let line = line.map_err(|e| e.to_string())?;
+        let line = line.into_ta_result()?;
         if let Some(rest) = line.strip_prefix("PRGV:") {
             let parts: Vec<u32> = rest.split(',').filter_map(|p| p.parse().ok()).collect();
             if let [current, _total, max] = parts[..] {
@@ -123,9 +125,9 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> Result<(), String> {
         }
     }
 
-    let status = child.wait().map_err(|e| e.to_string())?;
+    let status = child.wait().into_ta_result()?;
     if !status.success() {
-        return Err(format!("makemkvcon exited with {status}"));
+        anyhow_tauri::bail!("makemkvcon exited with {status}");
     }
 
     Ok(())

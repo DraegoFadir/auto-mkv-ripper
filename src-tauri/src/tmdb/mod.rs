@@ -1,3 +1,4 @@
+use anyhow_tauri::{TAResult, IntoTAResult};
 use tauri::AppHandle;
 use reqwest;
 use serde::{Deserialize, Serialize};
@@ -16,11 +17,11 @@ pub struct MovieDetails {
 }
 
 #[tauri::command]
-pub async fn get_tmdb(app: AppHandle, movie_id: i32) -> Result<MovieDetails, String> {
+pub async fn get_tmdb(app: AppHandle, movie_id: i32) -> TAResult<MovieDetails> {
     let settings: Settings = Settings::load(&app)?;
-
+ 
     if settings.tmdb_api_key.is_empty() {
-        return Err("TMDB API Key is not set. Add it in Settings.".into());
+        anyhow_tauri::bail!("TMDB API Key is not set. Add it in Settings.");
     }
 
     let url: String = format!("https://api.themoviedb.org/3/movie/{movie_id}");
@@ -30,11 +31,9 @@ pub async fn get_tmdb(app: AppHandle, movie_id: i32) -> Result<MovieDetails, Str
     let res: reqwest::Response = client.get(url)
         .query(&[("api_key", api_key)])
         .send()
-        .await
-        .map_err(|e: reqwest::Error| e.to_string())?;
+        .await.into_ta_result()?;
 
-
-    let body: MovieDetails = res.json::<MovieDetails>().await.map_err(|e: reqwest::Error| e.to_string())?;
+    let body: MovieDetails = res.json::<MovieDetails>().await.into_ta_result()?;
 
     Ok(body)
 }
