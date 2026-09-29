@@ -1,3 +1,4 @@
+use anyhow_tauri::IntoTAResult;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
@@ -32,8 +33,8 @@ pub struct PrivateSettings {
 }
 
 impl Settings {
-    pub fn load(app: &AppHandle) -> Result<Self, String> {
-        let store = app.store(STORE_FILE).map_err(|e| e.to_string())?;
+    pub fn load(app: &AppHandle) -> anyhow_tauri::TAResult<Self> {
+        let store = app.store(STORE_FILE).into_ta_result()?;
         Ok(store
             .get(STORE_KEY)
             .and_then(|v| serde_json::from_value(v).ok())
