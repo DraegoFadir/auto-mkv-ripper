@@ -70,7 +70,7 @@
         <option value="tv-show">TV Show</option>
         <option value="anime">Anime</option>
     </select>
-    <input type="search" name="search" placeholder="{hintText}" aria-label="{hintText}" bind:value={searchId} />
+    <input type="search" name="search" placeholder="{hintText}" autocomplete="off" aria-label="{hintText}" bind:value={searchId} />
     <button type="submit" aria-label="{loading ? "Searching" : "Search"}" aria-busy="{loading}">Search</button>
 </form>
 
@@ -82,7 +82,7 @@
         <main>
             {#if media && !app.state.mediaSelected.some(m => m.id === media.id)}
                 <label class="media-select-label">
-                    <MediaCardComponent media={media}>
+                    <MediaCardComponent media={media} alignChildrenEnd>
                         <input type="checkbox" name={`${media.id}`} bind:group={app.state.mediaSelected} value={media} />
                     </MediaCardComponent>
                 </label>
@@ -105,7 +105,7 @@
         {#if app.state.mediaSelected.length > 0}
             {#each app.state.mediaSelected as m (m.id)}
                 <label class="media-select-label">
-                    <MediaCardComponent media={m}>
+                    <MediaCardComponent media={m} alignChildrenEnd>
                         <input type="checkbox" name={`${m.id}`} bind:group={app.state.mediaSelected} value={m} />
                     </MediaCardComponent>
                 </label>
@@ -155,12 +155,12 @@
         }
     }
 
-    .media-footer {
-        text-align: right;
+    :global(.success) {
+        color: var(--pico-ins-color);
+    }
 
-        button {
-            margin: 0;
-        }
+    :global(.danger) {
+        color: var(--pico-del-color);
     }
 
 </style>

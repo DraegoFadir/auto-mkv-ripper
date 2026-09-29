@@ -59,15 +59,58 @@
         unlisten();
     }
 
+    function isRunning(progress?: Progress) {
+        if(!progress){
+            return false;
+        }
+
+        return progress.current > 0;
+    }
+
+    function isComplete(progress?: Progress) {
+        if(!progress) {
+            return false;
+        }
+
+        return progress.current === progress.max;
+    }
+
 </script>
 
 <h1>Rip</h1>
 
+{#snippet progress(p?: Progress)}
+    {#if !p}
+        <p class="danger">progress error</p>
+    {:else if p.current > 0}
+        <progress value={p.current} max={p.max}></progress>
+    {:else}
+        <progress></progress>
+    {/if}
+{/snippet}
+
 {#each app.state.titlesMapped as title(title.media.id)}
     <MediaCardComponent media={title.media}>
-        Ripping
-        <progress value={title.ripProgress?.current ?? 0} max={title.ripProgress?.max || 1}></progress>
-        Uploading
-        <progress value={title.sftpProgress?.current ?? 0} max={title.sftpProgress?.max || 1}></progress>
+        {#if isComplete(title.ripProgress)}
+            <p class="success">Rip Finished</p>
+        {:else if isRunning(title.ripProgress)}
+            Ripping
+            {@render progress(title.ripProgress)}
+        {:else}
+            <p>Rip Not Started</p>
+        {/if}
+
+
+
+        {#if isComplete(title.sftpProgress)}
+            <p class="success">Upload Finished</p>
+        {:else if isRunning(title.sftpProgress)}
+            Uploading
+            {@render progress(title.sftpProgress)}
+        {:else}
+            <p>Upload Not Started</p>
+        {/if}
+        
     </MediaCardComponent>
 {/each}
+

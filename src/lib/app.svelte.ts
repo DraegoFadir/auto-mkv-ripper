@@ -85,11 +85,20 @@ class AppState {
     reset = () => { this.state = defaults(); goto("/"); }
 
     nextDisabled = $derived.by(() => {
+        
         if(this.state.mediaSelected.length < 1 && this.state.nextStep == "scan") {
             return true;
         }
 
         if(this.state.titlesSelected.length < 1 && this.state.nextStep == "title-mapping") {
+            return true;
+        }
+
+        if(this.state.titlesMapped.find(x => x.ripProgress?.current !== x.ripProgress?.max)) {
+            return true;
+        }
+
+        if(this.state.titlesMapped.find(x => x.sftpProgress?.current !== x.sftpProgress?.max)) {
             return true;
         }
 
