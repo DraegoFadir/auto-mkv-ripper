@@ -18,13 +18,19 @@ export type TitleMap = {
     sftpProgress?: Progress;
 }
 
+export type Alert = {
+    message: string,
+    type: "success" | "error";
+} | null;
+
 type AppStateType = {
     mediaType: MediaType,
     discType: DiscType
     mediaSelected: MediaResponse[]
     titlesSelected: Title[]
     titlesMapped: TitleMap[]
-    nextStep: Step
+    nextStep: Step,
+    alert: Alert,
 }
 
 const defaults = (): AppStateType => ({
@@ -33,8 +39,9 @@ const defaults = (): AppStateType => ({
     mediaSelected: [],
     titlesSelected: [],
     titlesMapped: [],
-    nextStep: null
-}); 
+    nextStep: null,
+    alert: null,
+});
 
 class AppState {
     state: AppStateType = $state<AppStateType>(defaults());
@@ -55,6 +62,7 @@ class AppState {
     }
  
     next = () => {
+        this.resetAlert();
         if(this.state.mediaSelected.length < 1 && this.state.nextStep === "scan") {
             return;
         }
@@ -83,6 +91,9 @@ class AppState {
     }
 
     reset = () => { this.state = defaults(); goto("/"); }
+    
+    resetAlert = () => { this.state.alert = defaults().alert }
+    setAlert = (alert: Alert) => { this.state.alert = alert };
 
     nextDisabled = $derived.by(() => {
         
