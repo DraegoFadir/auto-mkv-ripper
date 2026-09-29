@@ -127,7 +127,7 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<()> {
 
     let status = child.wait().into_ta_result()?;
     if !status.success() {
-        anyhow_tauri::bail!(format!("makemkvcon exited with {status}"));
+        anyhow_tauri::bail!("makemkvcon exited with {status}");
     }
 
     Ok(())
