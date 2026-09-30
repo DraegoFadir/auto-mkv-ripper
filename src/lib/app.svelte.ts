@@ -44,6 +44,7 @@ const defaults = (): AppStateType => ({
 });
 
 class AppState {
+    alertTimer: ReturnType<typeof setTimeout> | undefined;
     state: AppStateType = $state<AppStateType>(defaults());
 
     getNextString = () => {
@@ -93,7 +94,13 @@ class AppState {
     reset = () => { this.state = defaults(); goto("/"); }
     
     resetAlert = () => { this.state.alert = defaults().alert }
-    setAlert = (alert: Alert) => { this.state.alert = alert };
+    setAlert = (alert: Alert) => { 
+        clearTimeout(this.alertTimer)
+        this.state.alert = alert;
+        this.alertTimer = setTimeout(() => {
+            this.resetAlert();
+        }, 5000);
+    };
 
     nextDisabled = $derived.by(() => {
         

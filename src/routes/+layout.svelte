@@ -47,11 +47,13 @@
 
 </main>
 
-<div class="container" class:alert={app.state.alert} class:error={app.state.alert?.type == 'error'} class:success={app.state.alert?.type == 'success'}>
-    {#if app.state.alert}
-        {app.state.alert.message}
-    {/if}
-</div>
+{#if !settingsOpen}
+    <div class="alert-wrapper">
+        <p class="alert {app.state.alert?.type}">
+            {app.state.alert?.message}
+        </p>
+    </div>
+{/if}
 
 <footer class="container-fluid">
     <button disabled={app.nextDisabled} onclick={() => app.next()}>{app.getNextString()}</button>
@@ -60,9 +62,18 @@
 <DrawerComponent bind:open={settingsOpen} title="Settings">
     <SettingsFormComponent bind:saving bind:this={settingsForm} />
     {#snippet footer()}
-        <button class="save-btn" type="button" onclick={() => settingsForm.submit()} disabled={saving} aria-busy={saving}>
-            {#if !saving} Save <Save size={24} /> {/if}
-        </button>
+        <div class="settings-footer">
+            <div>
+                {#if app.state.alert}
+                    <p class="{app.state.alert.type}">
+                        {app.state.alert.message}
+                    </p>
+                {/if}
+            </div>
+            <button class="save-btn" type="button" onclick={() => settingsForm.submit()} disabled={saving} aria-busy={saving}>
+                {#if !saving} Save <Save size={24} /> {/if}
+            </button>
+        </div>
     {/snippet}
 </DrawerComponent>
 
@@ -80,10 +91,34 @@
         text-align: end;
     }
 
-    .alert {
-        text-align: left;
+    .alert-wrapper {
+        margin-left: 3rem;
         width: fit-content;
         max-width: 40%;
+    }
+
+    .settings-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .settings-footer > * {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .success,
+    .error {
+        text-align: left;
+        margin: 0;
+    }
+
+    .alert {
+        text-align: left;
+        margin: 0;
         box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
         border-radius: var(--pico-border-radius);
         padding: var(--pico-form-element-spacing-vertical) var(--pico-form-element-spacing-horizontal);  
@@ -127,7 +162,7 @@
         color: var(--pico-ins-color);
     }
 
-    :global(.danger) {
+    :global(.error) {
         color: var(--pico-del-color);
     }
 

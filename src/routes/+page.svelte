@@ -52,7 +52,7 @@
 
         if(!searchId || !parseInt(searchId)){
             app.setAlert({
-                message: 'Please enter a valid searchId',
+                message: `Please enter a valid ${hintText}`,
                 type: 'error'
             });
             return;
