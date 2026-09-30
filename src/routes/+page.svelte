@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
     import type { MovieDetails } from "../bindings/MovieDetails";
     import type { MediaResponse } from "../types/MediaResponse";
     import { app } from "../lib/app.svelte";
     import MediaCardComponent from "../components/MediaCardComponent.svelte";
+    import { rust } from "$lib/rust.svelte";
 
     app.state.nextStep = "scan";
 
@@ -47,14 +47,18 @@
     async function getMovie(event: SubmitEvent) {
         event.preventDefault();
 
-        if(!searchId)
+        result = null;
+        app.resetAlert();
+
+        if(!searchId || !parseInt(searchId)){
+            app.setAlert({
+                message: `Please enter a valid ${hintText}`,
+                type: 'error'
+            });
             return;
-    
-        try {
-            result = await invoke("get_tmdb", { movieId: parseInt(searchId) })
-        } catch(e) {
-            console.log(e)
         }
+        
+        result = await rust<MovieDetails>("get_tmdb", { movieId: parseInt(searchId) });
     }
 
     function selectMedia() {
@@ -154,13 +158,4 @@
             width: 25%;
         }
     }
-
-    :global(.success) {
-        color: var(--pico-ins-color);
-    }
-
-    :global(.danger) {
-        color: var(--pico-del-color);
-    }
-
 </style>

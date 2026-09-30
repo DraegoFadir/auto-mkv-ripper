@@ -2,7 +2,19 @@ import { load } from "@tauri-apps/plugin-store";
 
 import type { Settings } from "../bindings/Settings";
 
-const defaults: Settings = { tmdb_api_key: "" }
+const defaults: Settings = {
+    tmdb_api_key: "",
+    tvdb_api_key: "",
+    tvdb_api_pin: "",
+    makemkv_path: "",
+    output_directory: "",
+    sftp_hostname: "",
+    sftp_username: "",
+    sftp_password: "",
+    sftp_movie_path: "",
+    sftp_tvshow_path: "",
+    sftp_anime_path: ""
+}
 
 export const settings = $state<Settings>({ ...defaults });
 

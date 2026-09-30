@@ -47,6 +47,14 @@
 
 </main>
 
+{#if !settingsOpen}
+    <div class="alert-wrapper">
+        <p class="alert {app.state.alert?.type}">
+            {app.state.alert?.message}
+        </p>
+    </div>
+{/if}
+
 <footer class="container-fluid">
     <button disabled={app.nextDisabled} onclick={() => app.next()}>{app.getNextString()}</button>
 </footer>
@@ -54,9 +62,18 @@
 <DrawerComponent bind:open={settingsOpen} title="Settings">
     <SettingsFormComponent bind:saving bind:this={settingsForm} />
     {#snippet footer()}
-        <button class="save-btn" type="button" onclick={() => settingsForm.submit()} disabled={saving} aria-busy={saving}>
-            {#if !saving} Save <Save size={24} /> {/if}
-        </button>
+        <div class="settings-footer">
+            <div>
+                {#if app.state.alert}
+                    <p class="{app.state.alert.type}">
+                        {app.state.alert.message}
+                    </p>
+                {/if}
+            </div>
+            <button class="save-btn" type="button" onclick={() => settingsForm.submit()} disabled={saving} aria-busy={saving}>
+                {#if !saving} Save <Save size={24} /> {/if}
+            </button>
+        </div>
     {/snippet}
 </DrawerComponent>
 
@@ -74,10 +91,55 @@
         text-align: end;
     }
 
+    .alert-wrapper {
+        margin-left: 3rem;
+        width: fit-content;
+        max-width: 40%;
+    }
+
+    .settings-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .settings-footer > * {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .success,
+    .error {
+        text-align: left;
+        margin: 0;
+    }
+
+    .alert {
+        text-align: left;
+        margin: 0;
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
+        border-radius: var(--pico-border-radius);
+        padding: var(--pico-form-element-spacing-vertical) var(--pico-form-element-spacing-horizontal);  
+        color: var(--pico-color);
+    }
+
+    .alert.error {
+        border: var(--pico-border-width) solid var(--pico-form-element-invalid-border-color);
+        background-color: color-mix(in srgb, var(--pico-form-element-invalid-border-color) 35%, var(--pico-card-background-color));
+    }
+
+    .alert.success {  
+        border: var(--pico-border-width) solid var(--pico-form-element-valid-border-color);
+        background-color: color-mix(in srgb, var(--pico-form-element-valid-border-color) 35%, var(--pico-card-background-color));  
+    }
+
     :global(body) {
         display: flex;
         flex-direction: column;
         height: 100vh;
+        gap: .5rem;
     }
 
     :global(body > main) {
@@ -95,4 +157,13 @@
         background: var(--pico-card-background-color);
         border-top: 1px solid var(--pico-muted-border-color);
     }
+
+    :global(.success) {
+        color: var(--pico-ins-color);
+    }
+
+    :global(.error) {
+        color: var(--pico-del-color);
+    }
+
 </style>

@@ -2,10 +2,9 @@
     import { open } from '@tauri-apps/plugin-dialog'
     import { Folder, File } from '@lucide/svelte';
     import {settings, saveSettings} from "../lib/settings.svelte";
-    import { app } from "$lib/app.svelte";
+    import { app } from '$lib/app.svelte';
 
     let { saving = $bindable(false) }: {saving: boolean} = $props();
-    let status = $state("");
 
     let formRef: HTMLFormElement;
     export function submit(): void {
@@ -17,9 +16,15 @@
         saving = true;
         try {
             await saveSettings();
-            status = "Saved";
+            app.setAlert({
+                message: "Saved",
+                type: 'success'
+            });
         } catch(err) {
-            status = `Error: ${err}`;
+            app.setAlert({
+                message: "Error saving settings",
+                type: 'error'
+            });
         } finally {
             saving = false;
         }
