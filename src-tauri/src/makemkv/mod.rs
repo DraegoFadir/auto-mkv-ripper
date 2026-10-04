@@ -40,14 +40,9 @@ struct RipProgress {
 pub async fn scan_disc(app: AppHandle) -> TAResult<Vec<Title>> {
     
     let settings: Settings = Settings::load(&app)?;
+    let makemkv_path = settings.makemkv_path()?;
 
-    // This is not necessary for linux which runs off flatpak
-    #[cfg(target_os = "windows")] 
-    if settings.makemkv_path.is_empty() {
-        anyhow_tauri::bail!("MakeMKV Path is not set. Add it in Settings.");
-    }
-
-    let output = makemkvcon(settings.makemkv_path)
+    let output = makemkvcon(makemkv_path)
         .args(["-r", "--minlength=3600", "info", "disc:0"])
         .output()
         .into_ta_result()?;
@@ -90,21 +85,12 @@ pub async fn scan_disc(app: AppHandle) -> TAResult<Vec<Title>> {
 pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<()> {
 
     let settings: Settings = Settings::load(&app)?;
+    let makemkv_path = settings.makemkv_path()?;
+    let output = settings.output_directory()?;
 
-    #[cfg(target_os = "windows")]
-    if settings.makemkv_path.is_empty() {
-        anyhow_tauri::bail!("MakeMKV Path is not set. Add it in Settings.");
-    }
-
-    if settings.output_directory.is_empty() {
-        anyhow_tauri::bail!("No Output Directory is set. Add it in Settings.");
-    }
-
-    let output = &settings.output_directory;
-
-    std::fs::create_dir_all(output).into_ta_result()?;
-    let mut child: std::process::Child = makemkvcon(settings.makemkv_path)
-        .args(["-r", "--progress=-same", "--minlength=3600", "mkv", "disc:0", &(title_index.to_string()), output])
+    std::fs::create_dir_all(&output).into_ta_result()?;
+    let mut child: std::process::Child = makemkvcon(makemkv_path)
+        .args(["-r", "--progress=-same", "--minlength=3600", "mkv", "disc:0", &title_index.to_string(), output.as_str()])
         .stdout(Stdio::piped())
         .spawn()
         .into_ta_result()?;
