@@ -1,16 +1,24 @@
 <script lang="ts">
-    import "@picocss/pico/css/pico.indigo.min.css"
+    import "@picocss/pico/css/pico.violet.min.css"
     import {onMount} from "svelte";
-    import { Save, Settings } from "@lucide/svelte";
+    import { ChevronRight, Save, Settings } from "@lucide/svelte";
 
     import DrawerComponent from "../components/DrawerComponent.svelte";
     import SettingsFormComponent from "../components/SettingsFormComponent.svelte";
-    import { loadSettings, settings } from "../lib/settings.svelte";
+    import { loadSettings } from "../lib/settings.svelte";
     import { app } from "../lib/app.svelte";
 
     interface FormHandle {
         submit: () => void;
     }
+
+    // Trying to prevent back/forward navigation which could break processes like scan/rip/sftp
+    window.addEventListener("keydown", (e) => {
+        if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) e.preventDefault();
+    });
+    window.addEventListener("mouseup", (e) => {
+        if (e.button === 3 || e.button === 4) e.preventDefault();
+    });
 
     onMount(loadSettings);
 
@@ -56,7 +64,7 @@
 {/if}
 
 <footer class="container-fluid">
-    <button disabled={app.nextDisabled} onclick={() => app.next()}>{app.getNextString()}</button>
+    <button onclick={() => app.next()}>{app.state.currentStep === "rip" ? "Finish" : "Continue"} <ChevronRight /></button>
 </footer>
 
 <DrawerComponent bind:open={settingsOpen} title="Settings">

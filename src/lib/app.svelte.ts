@@ -1,10 +1,11 @@
 import { goto } from "$app/navigation";
+import type { Status } from "../bindings/Status";
 import type { Title } from "../bindings/Title";
 import type { MediaResponse } from "../types/MediaResponse";
 
 export type MediaType = "movie" | "tv-show" | "anime"
 export type DiscType = "dvd" | "bluray" | "4k"
-export type Step = "scan" | "title-mapping" | "rip" | "finish" | null
+export type Step = "search" | "scan" | "title-mapping" | "rip" | "finish" | null
 
 export type Progress = {
     current: number,
@@ -14,7 +15,9 @@ export type Progress = {
 export type TitleMap = {
     title: Title;
     media: MediaResponse;
+    ripStatus?: Status;
     ripProgress?: Progress;
+    sftpStatus?: Status;
     sftpProgress?: Progress;
 }
 
@@ -29,7 +32,7 @@ type AppStateType = {
     mediaSelected: MediaResponse[]
     titlesSelected: Title[]
     titlesMapped: TitleMap[]
-    nextStep: Step,
+    currentStep: Step,
     alert: Alert,
 }
 
@@ -39,56 +42,60 @@ const defaults = (): AppStateType => ({
     mediaSelected: [],
     titlesSelected: [],
     titlesMapped: [],
-    nextStep: null,
+    currentStep: null,
     alert: null,
 });
 
 class AppState {
     alertTimer: ReturnType<typeof setTimeout> | undefined;
-    state: AppStateType = $state<AppStateType>(defaults());
-
-    getNextString = () => {
-        switch(this.state.nextStep) {
-            case "scan":
-                return "Continue to Disc Scan"
-            case "title-mapping":
-                return "Continue to Title Mapping"
-            case "rip":
-                return "Continue to Rip & Upload"
-            case "finish":
-                return "Finish"
-            default:
-                return "Continue"
-        }
-    }
+    state: AppStateType = $state<AppStateType>(defaults())
  
+    go = (route: Step) => goto(`/${this.state.mediaType}/${route}`);
     next = () => {
         this.resetAlert();
-        if(this.state.mediaSelected.length < 1 && this.state.nextStep === "scan") {
-            return;
-        }
+        
+        // Search -> Scan -> Title Mapping -> Rip -> Finish
+        switch(this.state.currentStep) {
+            case "search": {
+                if (this.state.mediaSelected.length > 0) {
+                    return this.go("scan");
+                }
+            }
+            case "scan": {
+                if (this.state.titlesSelected.length < 1) {
+                    return;
+                }
 
-        if(this.state.titlesSelected.length < 1 && this.state.nextStep === "title-mapping") {
-            return;
-        }
+                if (this.state.mediaSelected.length > 1) {
+                    this.state.titlesMapped = defaults().titlesMapped;
+                    return this.go("title-mapping");
+                }
 
-        if(this.state.titlesSelected.length === 1 && this.state.nextStep === "title-mapping") {
-            this.state.titlesMapped.push({
-                title: this.state.titlesSelected[0],
-                media: this.state.mediaSelected[0]
-            });
-            this.state.nextStep = "rip";
-        }
+                // Only 1 media selected, Just map to 1 title
+                this.state.titlesMapped = [{
+                    title: this.state.titlesSelected[0],
+                    media: this.state.mediaSelected[0]
+                }];
+                return this.go("rip");
+            }
+            case "title-mapping": {
+                if (this.state.titlesMapped.length > 0) {
+                    return this.go("rip");
+                }
+            }
+            case "rip": {
+                const isRipping = this.state.titlesMapped.some((x) => x.ripStatus !== "done" && x.ripStatus !== "failed");
+                const isUploading = this.state.titlesMapped.some((x) => x.sftpStatus !== "done" && x.sftpStatus !== "failed");
 
-        let route = "";
-        if (this.state.nextStep && this.state.nextStep !== "scan") {
-            route = this.state.nextStep;
-        }
-        if(this.state.nextStep && this.state.nextStep === "finish") {
-            return this.reset();
-        }
+                if (isRipping || isUploading) {
+                    return;
+                }
 
-        goto(`/${this.state.mediaType}/${route}`)
+                return this.reset();
+            }
+            default:
+                return this.reset();
+        }
     }
 
     reset = () => { this.state = defaults(); goto("/"); }
@@ -101,27 +108,6 @@ class AppState {
             this.resetAlert();
         }, 5000);
     };
-
-    nextDisabled = $derived.by(() => {
-        
-        if(this.state.mediaSelected.length < 1 && this.state.nextStep == "scan") {
-            return true;
-        }
-
-        if(this.state.titlesSelected.length < 1 && this.state.nextStep == "title-mapping") {
-            return true;
-        }
-
-        if(this.state.titlesMapped.find(x => x.ripProgress?.current !== x.ripProgress?.max)) {
-            return true;
-        }
-
-        if(this.state.titlesMapped.find(x => x.sftpProgress?.current !== x.sftpProgress?.max)) {
-            return true;
-        }
-
-        return false;
-    });
 }
 
 export const app = new AppState();

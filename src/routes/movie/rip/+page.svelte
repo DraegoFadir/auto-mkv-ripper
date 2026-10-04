@@ -6,10 +6,32 @@
     import { settings } from "$lib/settings.svelte";
     import type { Sftp } from "../../../bindings/Sftp";
     import { rust } from "$lib/rust.svelte";
+    import type { TitleStatus } from "../../../bindings/TitleStatus";
 
-    app.state.nextStep = "finish";
+    app.state.currentStep = "rip";
 
-    onMount(beginRip)
+    $effect(() => {
+        const unlistenRipStatus = listen<TitleStatus>("rip-status", (e) => {
+            let title = app.state.titlesMapped.find((x) => x.title.index === e.payload.title_index);
+
+            if(title){
+                title.ripStatus = e.payload.status;
+            }
+        });
+
+        const unlistenSftpStatus = listen<TitleStatus>("sftp-status", (e) => {
+            let title = app.state.titlesMapped.find((x) => x.title.index === e.payload.title_index);
+
+            if(title){
+                title.sftpStatus = e.payload.status;
+            }
+        });
+
+        return () => { 
+            unlistenRipStatus.then((fn) => fn()); 
+            unlistenSftpStatus.then((fn) => fn()); 
+        };
+    })
 
     async function beginRip () {
         for (const title of app.state.titlesMapped) {
@@ -55,30 +77,14 @@
             map.sftpProgress = e.payload;
         });
 
-        await rust("send_sftp", { sftp })
+        await rust("send_sftp", { sftp, titleIndex: map.title.index })
         unlisten();
-    }
-
-    function isRunning(progress?: Progress) {
-        if(!progress){
-            return false;
-        }
-
-        return progress.current > 0;
-    }
-
-    function isComplete(progress?: Progress) {
-        if(!progress) {
-            return false;
-        }
-
-        return progress.current === progress.max;
     }
 
 </script>
 
 <h1>Rip</h1>
-
+<input type="button" value="Start Rip" onclick={beginRip} />
 {#snippet progress(p?: Progress)}
     {#if !p}
         <p class="danger">progress error</p>
@@ -91,26 +97,29 @@
 
 {#each app.state.titlesMapped as title(title.media.id)}
     <MediaCardComponent media={title.media}>
-        {#if isComplete(title.ripProgress)}
-            <p class="success">Rip Finished</p>
-        {:else if isRunning(title.ripProgress)}
+        {#if title.ripStatus === "started"}
             Ripping
             {@render progress(title.ripProgress)}
+        {:else if title.ripStatus === "done"}
+            <p class="success">Rip Finished</p>
+        {:else if title.ripStatus === "failed"}
+            <p class="error">Rip Failed</p>
         {:else}
             <p>Rip Not Started</p>
         {/if}
 
-
-
-        {#if isComplete(title.sftpProgress)}
-            <p class="success">Upload Finished</p>
-        {:else if isRunning(title.sftpProgress)}
+        {#if title.sftpStatus === "started"}
             Uploading
             {@render progress(title.sftpProgress)}
+        {:else if title.sftpStatus === "done"}
+            <p class="success">Upload Finished</p>
+        {:else if title.sftpStatus === "failed"}
+            <p class="error">Upload Failed</p>
         {:else}
             <p>Upload Not Started</p>
         {/if}
-        
+
+        <input type="button" value="Stop" class="contrast" disabled />
     </MediaCardComponent>
 {/each}
 
