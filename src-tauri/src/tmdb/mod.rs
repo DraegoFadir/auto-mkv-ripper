@@ -20,12 +20,8 @@ pub struct MovieDetails {
 pub async fn get_tmdb(app: AppHandle, movie_id: i32) -> TAResult<MovieDetails> {
     let settings: Settings = Settings::load(&app)?;
  
-    if settings.tmdb_api_key.is_empty() {
-        anyhow_tauri::bail!("TMDB API Key is not set. Add it in Settings.");
-    }
-
     let url: String = format!("https://api.themoviedb.org/3/movie/{movie_id}");
-    let api_key: &str = settings.tmdb_api_key.as_str();
+    let api_key: String = settings.tmdb_api_key()?;
 
     let client: reqwest::Client = reqwest::Client::new();
     let res: reqwest::Response = client.get(url)

@@ -50,27 +50,18 @@ struct SftpProgress {
 #[tauri::command]
 pub async fn send_sftp(app: AppHandle, sftp: Sftp)  -> TAResult<()> {
     let settings: Settings = Settings::load(&app)?;
-    
-    if settings.sftp_hostname.is_empty() {
-        anyhow_tauri::bail!("No Sftp Hostname set. Set one in settings");
-    }
+    let sftp_host = settings.sftp_hostname()?;
+    let sftp_username = settings.sftp_username()?;
+    let sftp_password = settings.sftp_password()?;
 
     let config = russh::client::Config::default();
     let sh = Client {};
-    let mut session = russh::client::connect(Arc::new(config), format!("{}:22", settings.sftp_hostname), sh)
+    let mut session = russh::client::connect(Arc::new(config), format!("{}:22", sftp_host), sh)
         .await
         .into_ta_result()?;
 
-    if settings.sftp_username.is_empty() {
-        anyhow_tauri::bail!("No Sftp Username set. Set one in settings");
-    }
-
-    if settings.sftp_password.is_empty() {
-        anyhow_tauri::bail!("No Sftp Password set. Set one in settings");
-    }
-
     if session
-        .authenticate_password(settings.sftp_username.trim(), settings.sftp_password.trim())
+        .authenticate_password(sftp_username.trim(), sftp_password.trim())
         .await
         .into_ta_result()?
         .success()
