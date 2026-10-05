@@ -24,6 +24,29 @@ Grab the latest release for your platform from the [Releases](../../releases) pa
   - **Windows**: point the app at your `makemkvcon64.exe` install path in Settings
   - **Linux**: installed as a Flatpak (`com.makemkv.MakeMKV`)
 
+## Roadmap
+
+### v0.3.0 — Enhanced Search
+- [ ] Search TMDB by name
+- [ ] Search by ID using the `id:` prefix (e.g. `id:9966`)
+
+### v0.4.0 — TV Shows
+- [ ] TVDB lookup
+- [ ] TV season support
+- [ ] Episode mapping
+
+### v0.5.0 — Anime
+- [ ] TVDB lookup for anime
+- [ ] Anime episode mapping
+
+### v1.0.0 — Stable Release
+- [ ] Bug fixes
+- [ ] UI polish
+- [ ] Code cleanup
+
+### Beyond v1.0
+- [ ] SFTP media management (browse and manage media already on the server)
+
 ## Development
 
 ### Prerequisites
