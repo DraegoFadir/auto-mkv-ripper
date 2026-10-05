@@ -35,9 +35,10 @@ Grab the latest release for your platform from the [Releases](../../releases) pa
 - [ ] TV season support
 - [ ] Episode mapping
 
-### v0.5.0 — Anime
+### v0.5.0 — Anime & Public Beta
 - [ ] TVDB lookup for anime
 - [ ] Anime episode mapping
+- [ ] Movies, TV, and anime fully supported; ready for wider testing and feedback
 
 ### v1.0.0 — Stable Release
 - [ ] Bug fixes
