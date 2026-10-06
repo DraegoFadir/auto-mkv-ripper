@@ -85,7 +85,7 @@ class AppState {
             }
             case "rip": {
                 const isRipping = this.state.titlesMapped.some((x) => x.ripStatus !== "done" && x.ripStatus !== "failed");
-                const isUploading = this.state.titlesMapped.some((x) => x.sftpStatus !== "done" && x.sftpStatus !== "failed");
+                const isUploading = this.state.titlesMapped.some((x) => x.ripStatus === "done" && x.sftpStatus !== "done" && x.sftpStatus !== "failed");
 
                 if (isRipping || isUploading) {
                     return;

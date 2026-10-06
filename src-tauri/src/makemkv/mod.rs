@@ -75,7 +75,7 @@ pub async fn scan_disc(app: AppHandle) -> TAResult<Vec<Title>> {
 
 
 #[tauri::command]
-pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<()> {
+pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<bool> {
 
     let settings: Settings = Settings::load(&app)?;
     let makemkv_path = settings.makemkv_path()?;
@@ -97,7 +97,7 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<()> {
     result
 }
 
-fn run_rip(app: &AppHandle, child: &mut Child, title_index: u32) -> TAResult<()> {
+fn run_rip(app: &AppHandle, child: &mut Child, title_index: u32) -> TAResult<bool> {
     let stdout = child.stdout.take().context("no stdout").into_ta_result()?;
 
     // AI Helped with this too
@@ -119,7 +119,7 @@ fn run_rip(app: &AppHandle, child: &mut Child, title_index: u32) -> TAResult<()>
         anyhow_tauri::bail!("makemkvcon exited with {status}");
     }
 
-    Ok(())
+    Ok(true)
 }
 
 // Function was AI Assisted
