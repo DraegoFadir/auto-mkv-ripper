@@ -1,13 +1,15 @@
 <script lang="ts">    
     import { app } from "$lib/app.svelte";
-    import type { Title } from "../../bindings/Title";
+    import type { Title } from "../../../bindings/Title";
     import prettyBytes from "pretty-bytes";
     import { rust } from "$lib/rust.svelte";
 
-    app.state.nextStep = "title-mapping";
+    app.state.currentStep = "scan";
 
     let loading: boolean = $state(false);
     let titles: Title[] = $state([])
+
+    const atLimit = $derived(app.state.titlesSelected.length >= app.state.mediaSelected.length);
 
     async function startScan() {
         loading = true;
@@ -34,12 +36,20 @@
     <input type="button" class="secondary" value="Start Scan" onclick={startScan} />
 
     {#if titles.length > 0}
-        <h2>Select Titles to Map</h2>
+        <hgroup>
+            <h2>Select Titles to Map</h2>
+            <p>{app.state.titlesSelected.length} of {app.state.mediaSelected.length} titles selected</p>
+        </hgroup>
         <fieldset>
             {#each titles as title}
                 <label>
                     <article>
-                        <input type="checkbox" name="title_{title.index}" bind:group={app.state.titlesSelected} value={title}  />
+                        <input 
+                            type="checkbox" 
+                            name="title_{title.index}" 
+                            bind:group={app.state.titlesSelected} 
+                            value={title}   
+                            disabled={atLimit && !app.state.titlesSelected.includes(title)} />
                         <table>
                             <thead>
                                 <tr>

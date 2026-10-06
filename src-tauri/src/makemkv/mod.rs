@@ -1,11 +1,11 @@
-use std::{collections::BTreeMap, io::{BufRead, BufReader}, process::{Command, Stdio}};
+use std::{collections::BTreeMap, io::{BufRead, BufReader}, process::{Child, Command, Stdio}};
 use anyhow::Context;
 use anyhow_tauri::{IntoTAResult, TAResult};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use ts_rs::TS;
 
-use crate::settings::Settings;
+use crate::{models::{Status, TitleProgress, TitleStatus}, settings::Settings};
 
 #[derive(Default, Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -21,19 +21,12 @@ pub struct Title {
     file_name: Option<String>
 }
 
-
 #[derive(Deserialize)]
 struct DiscInfoRow {
     title: u32,
     attr: u32,
     _code: u32,
     value: String
-}
-
-#[derive(Clone, serde::Serialize)]
-struct RipProgress {
-    current: u32,
-    max: u32,
 }
 
 #[tauri::command]
@@ -82,20 +75,30 @@ pub async fn scan_disc(app: AppHandle) -> TAResult<Vec<Title>> {
 
 
 #[tauri::command]
-pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<()> {
+pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<bool> {
 
     let settings: Settings = Settings::load(&app)?;
     let makemkv_path = settings.makemkv_path()?;
     let output = settings.output_directory()?;
 
     std::fs::create_dir_all(&output).into_ta_result()?;
-    let mut child: std::process::Child = makemkvcon(makemkv_path)
+    let mut child: Child = makemkvcon(makemkv_path)
         .args(["-r", "--progress=-same", "--minlength=3600", "mkv", "disc:0", &title_index.to_string(), output.as_str()])
         .stdout(Stdio::piped())
         .spawn()
         .into_ta_result()?;
 
-    let stdout = child.stdout.take().context("no stdout")?;
+    app.emit("rip-status", TitleStatus { title_index, status: Status::Started }).ok();
+
+    let result = run_rip(&app, &mut child, title_index);
+    let status = if result.is_ok() { Status::Done } else { Status::Failed };
+
+    app.emit("rip-status", TitleStatus { title_index, status }).ok();
+    result
+}
+
+fn run_rip(app: &AppHandle, child: &mut Child, title_index: u32) -> TAResult<bool> {
+    let stdout = child.stdout.take().context("no stdout").into_ta_result()?;
 
     // AI Helped with this too
     // I'm still learning the Rust, don't be too hard on me
@@ -103,8 +106,8 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<()> {
         let line = line.into_ta_result()?;
         if let Some(rest) = line.strip_prefix("PRGV:") {
             let parts: Vec<u32> = rest.split(',').filter_map(|p| p.parse().ok()).collect();
-            if let [current, _total, max] = parts[..] {
-                app.emit("rip-progress", RipProgress { current, max }).ok();
+            if let [current, total, max] = parts[..] {
+                app.emit("rip-progress", TitleProgress { title_index, current: u64::from(current), total: Some(u64::from(total)), max: u64::from(max) }).ok();
             }
         } else if line.starts_with("MSG:") {
             println!("{line}")
@@ -116,7 +119,7 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<()> {
         anyhow_tauri::bail!("makemkvcon exited with {status}");
     }
 
-    Ok(())
+    Ok(true)
 }
 
 // Function was AI Assisted

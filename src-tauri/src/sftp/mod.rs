@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use anyhow::Context;
 use anyhow_tauri::{IntoTAResult, TAResult};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
@@ -9,7 +10,7 @@ use russh_sftp::client::SftpSession;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use ts_rs::TS;
 use tokio::fs::File as LocalFile;
-use crate::settings::Settings;
+use crate::{models::{Status, TitleProgress, TitleStatus}, settings::Settings};
 
 struct Client;
 
@@ -41,14 +42,8 @@ pub struct Sftp {
     file_path: String,
 }
 
-#[derive(Clone, serde::Serialize)]
-struct SftpProgress {
-    current: u64,
-    max: u64,
-}
-
 #[tauri::command]
-pub async fn send_sftp(app: AppHandle, sftp: Sftp)  -> TAResult<()> {
+pub async fn send_sftp(app: AppHandle, title_index: u32, sftp: Sftp)  -> TAResult<()> {
     let settings: Settings = Settings::load(&app)?;
     let sftp_host = settings.sftp_hostname()?;
     let sftp_username = settings.sftp_username()?;
@@ -68,36 +63,59 @@ pub async fn send_sftp(app: AppHandle, sftp: Sftp)  -> TAResult<()> {
     {
         let channel = session.channel_open_session().await.into_ta_result()?;
         channel.request_subsystem(true, "sftp").await.into_ta_result()?;
-
+        
         let sftp_session = SftpSession::new(channel.into_stream()).await.into_ta_result()?;
+        
+        app.emit("sftp-status", TitleStatus { title_index, status: Status::Started }).ok();
 
-        let mut local = LocalFile::open(&sftp.local_path).await.into_ta_result()?;
+        let result = run_sftp(&app, title_index, &sftp, sftp_session).await;
+        let status = if result.is_ok() { Status::Done } else { Status::Failed };
+        
+        app.emit("sftp-status", TitleStatus { title_index, status }).ok();
+        result
+    } else {
+        anyhow_tauri::bail!("SFTP authentication failed. Check your username and password.");
+    }
+}
 
-        match sftp_session.create_dir(&sftp.remote_path).await {
-            Ok(_) => {},
-            Err(e) if e.to_string().contains("failure") => {},
-            Err(e) => anyhow_tauri::bail!("[sftp.create_dir] error: {:?}", e.to_string()),
-        }
+async fn run_sftp(app: &AppHandle, title_index: u32, sftp: &Sftp, sftp_session: SftpSession) -> TAResult<()> {
 
-        let mut remote = sftp_session
-            .create(format!("{}/{}", &sftp.remote_path, &sftp.file_path))
-            .await
+    let mut local = LocalFile::open(&sftp.local_path).await.into_ta_result()?;
+    let total = local.metadata().await.into_ta_result()?.len();
+    if total == 0 {
+        anyhow_tauri::bail!("File is empty");
+    }
+
+    if !sftp_session.try_exists(&sftp.remote_path).await.into_ta_result()? {
+        sftp_session.create_dir(&sftp.remote_path).await
+            .context("Failed to create the remote directory")
             .into_ta_result()?;
+    }
 
-        let total = local.metadata().await.into_ta_result()?.len();
+    let mut remote = sftp_session
+        .create(format!("{}/{}", &sftp.remote_path, &sftp.file_path))
+        .await
+        .into_ta_result()?;
 
-        let mut buf = vec![0u8; 256 * 1024];
-        let mut sent: u64 = 0;
+    let mut buf = vec![0u8; 256 * 1024];
+    let mut sent: u64 = 0;
 
-        loop {
-            let n = local.read(&mut buf).await.into_ta_result()?;
-            if n == 0 { break; }
-            remote.write_all(&buf[..n]).await.into_ta_result()?;
-            sent += n as u64;
+    let mut last_pct = 0;
+
+    loop {
+        let n = local.read(&mut buf).await.into_ta_result()?;
+        if n == 0 { break; }
+        remote.write_all(&buf[..n]).await.into_ta_result()?;
+        sent += n as u64;
+
+        let curr_pct = sent * 100 / total;
+        if curr_pct > last_pct {
             println!("{} send of {} total", sent, total);
-            app.emit("sftp-progress", SftpProgress { current: sent, max: total }).ok();
+            app.emit("sftp-progress", TitleProgress { title_index, total: None, current: sent, max: total }).ok();
+            last_pct = curr_pct;
         }
     }
 
+    remote.shutdown().await.into_ta_result()?;
     Ok(())
 }

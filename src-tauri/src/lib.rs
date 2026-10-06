@@ -1,11 +1,23 @@
+use tauri_plugin_prevent_default::Flags;
+
 mod settings;
 mod tmdb;
 mod makemkv;
 mod sftp;
+mod models;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let prevent = if cfg!(debug_assertions) {
+        tauri_plugin_prevent_default::Builder::new()
+            .with_flags(Flags::all().difference(Flags::DEV_TOOLS))
+            .build()
+    } else {
+        tauri_plugin_prevent_default::init()
+    };
+
     tauri::Builder::default()
+        .plugin(prevent)
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())

@@ -5,7 +5,7 @@
     import MediaCardComponent from "../components/MediaCardComponent.svelte";
     import { rust } from "$lib/rust.svelte";
 
-    app.state.nextStep = "scan";
+    app.state.currentStep = "search";
 
     let searchId: string = $state("");
     let loading: boolean = $state(false);

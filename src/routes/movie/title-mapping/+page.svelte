@@ -3,7 +3,7 @@
     import type { Title } from "../../../bindings/Title";
     import MediaCardComponent from "../../../components/MediaCardComponent.svelte";
 
-    app.state.nextStep = "rip";
+    app.state.currentStep = "title-mapping";
 
     function mapTitle(title: Title, id: number) {
         let movie = getMovieData(id);
