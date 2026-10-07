@@ -23,6 +23,9 @@ Grab the latest release for your platform from the [Releases](../../releases) pa
 - [MakeMKV](https://www.makemkv.com/) must be installed separately
   - **Windows**: point the app at your `makemkvcon64.exe` install path in Settings
   - **Linux**: installed as a Flatpak (`com.makemkv.MakeMKV`)
+- [MKVToolNix](https://mkvtoolnix.download/) (`mkvmerge`) is required for anime support (v0.5.0+)
+  - **Windows**: point the app at your `mkvmerge.exe` install path in Settings
+  - **Linux**: installed as a Flatpak (`org.bunkus.mkvtoolnix-gui`)
 
 ## Roadmap
 
