@@ -38,6 +38,8 @@ Grab the latest release for your platform from the [Releases](../../releases) pa
 ### v0.5.0 — Anime & Public Beta
 - [ ] TVDB lookup for anime
 - [ ] Anime episode mapping
+- [ ] Discs with combined episode files will try to find the best chapter split by average episode length
+- [ ] Ability to split SUB and DUB
 - [ ] Movies, TV, and anime fully supported; ready for wider testing and feedback
 
 ### v1.0.0 — Stable Release
