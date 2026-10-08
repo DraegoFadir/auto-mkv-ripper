@@ -1,70 +1,27 @@
 <script lang="ts">
-    import type { MovieDetails } from "../bindings/MovieDetails";
-    import type { MediaResponse } from "../types/MediaResponse";
     import { app } from "../lib/app.svelte";
     import MediaCardComponent from "../components/MediaCardComponent.svelte";
     import { rust } from "$lib/rust.svelte";
+    import type { Media } from "../bindings/Media";
 
     app.state.currentStep = "search";
 
-    let searchId: string = $state("");
+    let search: string = $state("");
     let loading: boolean = $state(false);
-    let result: MovieDetails | null = $state(null)
-
-    let hintText: string = $derived.by(() => {
-        switch(app.state.mediaType) {
-            case 'movie': 
-                return 'TMDB Movie ID';
-            case 'tv-show': 
-            case 'anime':
-                return 'TVDB Series ID';
-            default:
-                return 'Media Type not Set'
-        }
-    })
-
-    let media: MediaResponse | null = $derived.by(() => {
-        if(!result)
-            return null;
-
-        switch(app.state.mediaType) {
-            case 'movie':
-                let movie: MediaResponse = {
-                    id: result.id,
-                    title: result.original_title,
-                    overview: result.overview,
-                    release_date: new Date(result.release_date),
-                    poster_path: `https://image.tmdb.org/t/p/w342${result.poster_path}`
-                }
-                return movie;
-            default:
-                return null;
-        }
-    });
-
-    let hasMedia: boolean = $derived(app.state.mediaSelected.findIndex((x) => x.id === media?.id) >= 0)
+    let results: Media[] = $state([])
 
     async function getMovie(event: SubmitEvent) {
         event.preventDefault();
 
-        result = null;
+        results = [];
         app.resetAlert();
 
-        if(!searchId || !parseInt(searchId)){
-            app.setAlert({
-                message: `Please enter a valid ${hintText}`,
-                type: 'error'
-            });
-            return;
+        if(search.startsWith("id:")) {
+            results = await rust<Media[]>("get_tmdb_by_id", {tmdbId: parseInt(search.replace("id:", ""))}) ?? [];
+        } else {
+            results = await rust<Media[]>("search_tmdb", { query: search }) ?? [];
         }
-        
-        result = await rust<MovieDetails>("get_tmdb", { movieId: parseInt(searchId) });
-    }
 
-    function selectMedia() {
-        if(media && !hasMedia) {
-            app.state.mediaSelected.push(media)
-        }
     }
 </script>
 
@@ -74,7 +31,7 @@
         <option value="tv-show">TV Show</option>
         <option value="anime">Anime</option>
     </select>
-    <input type="search" name="search" placeholder="{hintText}" autocomplete="off" aria-label="{hintText}" bind:value={searchId} />
+    <input type="search" name="search" placeholder="Search by title, or by id with (id:) prefix" autocomplete="off" aria-label="Search by title, or by id with (id:) prefix" bind:value={search} />
     <button type="submit" aria-label="{loading ? "Searching" : "Search"}" aria-busy="{loading}">Search</button>
 </form>
 
@@ -84,12 +41,14 @@
             <h2>Search Results</h2>
         </header>
         <main>
-            {#if media && !app.state.mediaSelected.some(m => m.id === media.id)}
+            {#if results.length > 0}
+                {#each results.filter((m) => !app.state.mediaSelected.includes(m)) as media(media.id) }
                 <label class="media-select-label">
                     <MediaCardComponent media={media} alignChildrenEnd>
                         <input type="checkbox" name={`${media.id}`} bind:group={app.state.mediaSelected} value={media} />
                     </MediaCardComponent>
                 </label>
+                {/each}
             {:else}
                 <hgroup>
                     <h3>No Results Found</h3>

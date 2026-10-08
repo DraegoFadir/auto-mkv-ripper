@@ -77,7 +77,7 @@
         }
 
         const movie = map.media;
-        const year = movie.release_date.getFullYear();
+        const year = movie.release_date.substring(0, 4);
 
         const name = `${movie.title} (${year}) [tmdbid-${movie.id}]`;
 

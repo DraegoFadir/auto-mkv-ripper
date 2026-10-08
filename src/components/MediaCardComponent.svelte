@@ -1,16 +1,16 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import type { HTMLAttributes } from "svelte/elements";
-    import type { MediaResponse } from "../types/MediaResponse";
+    import type { Media } from "../bindings/Media";
 
-    let { media, alignChildrenEnd = false, children, ...rest } : { media: MediaResponse, alignChildrenEnd?: boolean, children?: Snippet } & HTMLAttributes<HTMLElement> = $props();
+    let { media, alignChildrenEnd = false, children, ...rest } : { media: Media, alignChildrenEnd?: boolean, children?: Snippet } & HTMLAttributes<HTMLElement> = $props();
 </script>
 
 
 <article {...rest}>
     <div class="movie-details">
-        <img src="{media.poster_path}" alt="{media.title}" />
-        <p>{media.title} ({media.release_date.getFullYear()})</p>
+        <img src="https://image.tmdb.org/t/p/w342/{media.poster_path}" alt="{media.title}" />
+        <p>{media.title} ({media.release_date.substring(0, 4)})</p>
         <div class:end={alignChildrenEnd}>
             {@render children?.()}
         </div>
