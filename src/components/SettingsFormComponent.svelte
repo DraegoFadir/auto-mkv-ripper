@@ -47,22 +47,6 @@
 
 <form bind:this={formRef} onsubmit={save}>
     <fieldset>
-        <legend><h3><strong>API Keys</strong></h3></legend>
-        <label>
-            TMDB Key
-            <input type="password" name="tmdb_api_key" placeholder="TMDB API Key" bind:value={settings.tmdb_api_key} aria-label="TMDB API Key" />
-        </label>
-        <label>
-            TVDB Key
-            <input type="password" name="tmdb_api_key" placeholder="TMDB API Key" bind:value={settings.tvdb_api_key} aria-label="TVDB API Key" />
-        </label>
-        <label>
-            TVDB Pin (Optional)
-            <input type="password" name="tmdb_api_key" placeholder="TMDB API Key" bind:value={settings.tvdb_api_pin} aria-label="TVDB API Pin" />
-        </label>
-    </fieldset>
-
-    <fieldset>
         <legend><h3><strong>MakeMKV</strong></h3></legend>
         <label>
             MakeMKV Path

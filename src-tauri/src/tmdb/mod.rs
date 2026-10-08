@@ -6,20 +6,14 @@ use tauri::AppHandle;
 use tauri::Manager;
 
 use crate::tmdb::service::TMDBService;
-use crate::{models::Media, settings::Settings };
+use crate::models::Media;
 
 #[tauri::command]
 pub async fn search_tmdb(app: AppHandle, query: String) -> TAResult<Vec<Media>> {
-    let settings: Settings = Settings::load(&app)?;
-    let api_key: String = settings.tmdb_api_key()?;
-
-    app.state::<TMDBService>().get_by_search(&query, &api_key).await
+    app.state::<TMDBService>().get_by_search(&query).await
 }
 
 #[tauri::command]
 pub async fn get_tmdb_by_id(app: AppHandle, tmdb_id: u32) -> TAResult<Vec<Media>> {
-    let settings: Settings = Settings::load(&app)?;
-    let api_key: String = settings.tmdb_api_key()?;
-
-    app.state::<TMDBService>().get_by_id(tmdb_id, &api_key).await
+    app.state::<TMDBService>().get_by_id(tmdb_id).await
 }
