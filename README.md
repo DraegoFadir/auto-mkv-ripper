@@ -29,10 +29,6 @@ Grab the latest release for your platform from the [Releases](../../releases) pa
 
 ## Roadmap
 
-### v0.3.0 — Enhanced Search
-- [ ] Search TMDB by name
-- [ ] Search by ID using the `id:` prefix (e.g. `id:9966`)
-
 ### v0.4.0 — TV Shows
 - [ ] TVDB lookup
 - [ ] TV season support
