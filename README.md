@@ -64,6 +64,49 @@ bun install
 bun run tauri dev
 ```
 
+## Environment Setup
+
+The app uses API keys that are compiled into the build at build time. They are not stored in the repo, so you'll need to provide your own key to build locally.
+
+### 1. Get a TMDB API key
+Create a free account and request an API key at https://www.themoviedb.org/settings/api
+
+### 2. Create your `.env` file
+Copy the example file:
+
+**Linux / macOS**
+```bash
+cp src-tauri/.env.example src-tauri/.env
+```
+
+**Windows (PowerShell)**
+```powershell
+Copy-Item src-tauri/.env.example src-tauri/.env
+```
+
+### 3. Add your key
+Open `src-tauri/.env`, uncomment the line, and add your key:
+
+```dotenv
+TMDB_API_KEY=your_key_here
+```
+
+> ⚠️ `.env` is gitignored. Never commit it or share your key.
+
+### Troubleshooting
+
+**Build fails with `Error loading .env file`**
+The `.env` file is missing. Make sure it exists at `src-tauri/.env`.
+
+**Build fails with a missing `TMDB_API_KEY` error**
+The `.env` file exists but the key isn't set. Make sure the line is uncomment and has a value.
+
+**Changed your key but the app still uses the old one**
+The key is compiled into the build, and Cargo may reuse the old compiled value. Force a rebuild:
+```bash
+cd src-tauri && cargo clean
+```
+
 ### Building
 
 ```bash
