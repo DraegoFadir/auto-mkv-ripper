@@ -1,7 +1,6 @@
 use anyhow_tauri::{IntoTAResult, TAResult};
 use dotenvy_macro::dotenv;
 use serde::de::DeserializeOwned;
-use tauri::http::response;
 
 use crate::{models::Media, tmdb::response::{TMDBResponse, TMDBResponseArray}};
 
