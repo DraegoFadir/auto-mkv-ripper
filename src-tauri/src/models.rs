@@ -28,7 +28,7 @@ pub struct TitleStatus {
 #[ts(export)]
 pub struct Media {
     pub id: u32,
-    pub original_title: String,
-    pub poster_path: String,
-    pub release_date: String
+    pub title: String,
+    pub poster_path: Option<String>,
+    pub release_date: Option<String>
 }

@@ -17,11 +17,18 @@ pub fn run() {
     };
 
     tauri::Builder::default()
+        .manage(tmdb::service::TMDBService::new(reqwest::Client::new()))
         .plugin(prevent)
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![tmdb::get_tmdb,makemkv::scan_disc,makemkv::rip_disc,sftp::send_sftp])
+        .invoke_handler(tauri::generate_handler![
+            tmdb::get_tmdb_by_id,
+            tmdb::search_tmdb,
+            makemkv::scan_disc,
+            makemkv::rip_disc,
+            sftp::send_sftp
+            ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

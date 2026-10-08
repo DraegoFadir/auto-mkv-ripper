@@ -1,35 +1,25 @@
-use anyhow_tauri::{TAResult, IntoTAResult};
+pub mod service;
+mod response;
+
+use anyhow_tauri::TAResult;
 use tauri::AppHandle;
-use reqwest;
-use serde::{Deserialize, Serialize};
-use ts_rs::TS;
+use tauri::Manager;
 
-use crate::settings::Settings;
+use crate::tmdb::service::TMDBService;
+use crate::{models::Media, settings::Settings };
 
-#[derive(Debug, Serialize, Deserialize, TS)]
-#[ts(export)]
-pub struct MovieDetails {
-    id: i32,
-    original_title: String,
-    poster_path: String,
-    overview: String,
-    release_date: String,
+#[tauri::command]
+pub async fn search_tmdb(app: AppHandle, query: String) -> TAResult<Vec<Media>> {
+    let settings: Settings = Settings::load(&app)?;
+    let api_key: String = settings.tmdb_api_key()?;
+
+    app.state::<TMDBService>().get_by_search(&query, &api_key).await
 }
 
 #[tauri::command]
-pub async fn get_tmdb(app: AppHandle, movie_id: i32) -> TAResult<MovieDetails> {
+pub async fn get_tmdb_by_id(app: AppHandle, tmdb_id: u32) -> TAResult<Vec<Media>> {
     let settings: Settings = Settings::load(&app)?;
- 
-    let url: String = format!("https://api.themoviedb.org/3/movie/{movie_id}");
     let api_key: String = settings.tmdb_api_key()?;
 
-    let client: reqwest::Client = reqwest::Client::new();
-    let res: reqwest::Response = client.get(url)
-        .query(&[("api_key", api_key)])
-        .send()
-        .await.into_ta_result()?;
-
-    let body: MovieDetails = res.json::<MovieDetails>().await.into_ta_result()?;
-
-    Ok(body)
+    app.state::<TMDBService>().get_by_id(tmdb_id, &api_key).await
 }
