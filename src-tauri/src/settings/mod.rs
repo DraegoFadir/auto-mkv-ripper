@@ -11,9 +11,6 @@ pub const STORE_KEY: &str = "settings";
 #[ts(export)]
 #[serde(default)]
 pub struct Settings {
-    tmdb_api_key: String,
-    tvdb_api_key: String,
-    tvdb_api_pin: String,
     makemkv_path: String,
     output_directory: String,
     sftp_hostname: String,
@@ -26,9 +23,6 @@ pub struct Settings {
 
 // Not used right now but will be used to store sensitive data more securely than a raw text json
 pub struct PrivateSettings {
-    tmdb_api_key: String,
-    tvdb_api_key: String,
-    tvdb_api_pin: String,
     sftp_password: String,
 }
 
@@ -58,12 +52,6 @@ impl Settings {
         )
     }
 
-    pub fn tmdb_api_key(&self) -> anyhow_tauri::TAResult<String> {
-        Self::require_non_empty(&self.tmdb_api_key, "TMDB API Key")
-    }
-    pub fn tvdb_api_key(&self) -> anyhow_tauri::TAResult<String> {
-        Self::require_non_empty(&self.tvdb_api_key, "TVDB API Key")
-    }
     pub fn makemkv_path(&self) -> anyhow_tauri::TAResult<String> {
         Self::require_non_empty_windows(&self.makemkv_path, "MakeMKV Path")
     }

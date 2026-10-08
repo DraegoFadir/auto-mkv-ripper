@@ -1,4 +1,5 @@
 use anyhow_tauri::{IntoTAResult, TAResult};
+use dotenvy_macro::dotenv;
 use serde::de::DeserializeOwned;
 use tauri::http::response;
 
@@ -19,6 +20,7 @@ impl TMDBService {
         let url = format!("{base}{path}", base = self.base_url);
         let res: reqwest::Response = client.get(url)
             .query(params)
+            .query(&[("api_key", dotenv!("TMDB_API_KEY"))])
             .send()
             .await
             .and_then(|r| r.error_for_status())
@@ -27,14 +29,14 @@ impl TMDBService {
         res.json::<T>().await.into_ta_result()
     }
 
-    pub async fn get_by_search(&self, query: &str, api_key: &str) -> TAResult<Vec<Media>> {
-        let response = self.get::<TMDBResponseArray>("/search/movie", &[("api_key", api_key),("query", query)]).await?;
+    pub async fn get_by_search(&self, query: &str) -> TAResult<Vec<Media>> {
+        let response = self.get::<TMDBResponseArray>("/search/movie", &[("query", query)]).await?;
 
         Ok(response.into())
     }
 
-    pub async fn get_by_id(&self, id: u32, api_key: &str) -> TAResult<Vec<Media>> {
-        let response = self.get::<TMDBResponse>(&format!("/movie/{id}"), &[("api_key", api_key)]).await?;
+    pub async fn get_by_id(&self, id: u32) -> TAResult<Vec<Media>> {
+        let response = self.get::<TMDBResponse>(&format!("/movie/{id}"), &[]).await?;
 
         Ok(vec![response.into()])
     }
