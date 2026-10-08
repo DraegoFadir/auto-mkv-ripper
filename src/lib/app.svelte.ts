@@ -1,7 +1,7 @@
 import { goto } from "$app/navigation";
+import type { Media } from "../bindings/Media";
 import type { Status } from "../bindings/Status";
 import type { Title } from "../bindings/Title";
-import type { MediaResponse } from "../types/MediaResponse";
 
 export type MediaType = "movie" | "tv-show" | "anime"
 export type DiscType = "dvd" | "bluray" | "4k"
@@ -14,7 +14,7 @@ export type Progress = {
 
 export type TitleMap = {
     title: Title;
-    media: MediaResponse;
+    media: Media;
     ripStatus?: Status;
     ripProgress?: Progress;
     sftpStatus?: Status;
@@ -29,7 +29,7 @@ export type Alert = {
 type AppStateType = {
     mediaType: MediaType,
     discType: DiscType
-    mediaSelected: MediaResponse[]
+    mediaSelected: Media[]
     titlesSelected: Title[]
     titlesMapped: TitleMap[]
     currentStep: Step,
