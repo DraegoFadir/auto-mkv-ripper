@@ -14,6 +14,6 @@ pub async fn search_tmdb(app: AppHandle, query: String) -> TAResult<Vec<Media>> 
 }
 
 #[tauri::command]
-pub async fn get_tmdb_by_id(app: AppHandle, tmdb_id: u32) -> TAResult<Vec<Media>> {
-    app.state::<TMDBService>().get_by_id(tmdb_id).await
+pub async fn get_tmdb_by_id(app: AppHandle, id: u32) -> TAResult<Vec<Media>> {
+    app.state::<TMDBService>().get_by_id(id).await
 }

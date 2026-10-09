@@ -24,11 +24,28 @@ pub struct TitleStatus {
     pub status: Status
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TS)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, TS)]
 #[ts(export)]
-pub struct Media {
+pub struct TMDBData {
     pub id: u32,
     pub title: String,
     pub poster_path: Option<String>,
     pub release_date: Option<String>
+}
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, TS)]
+#[ts(export)]
+pub struct TVDBData {
+    pub id: String,
+    pub name: String,
+    pub image_url: Option<String>,
+    pub year: Option<String>
+}
+
+
+#[derive(Debug, Clone, serde::Serialize, TS)]
+#[serde(tag = "kind")]
+#[ts(export)]
+pub enum Media {
+    Movie(TMDBData),
+    Series(TVDBData)
 }

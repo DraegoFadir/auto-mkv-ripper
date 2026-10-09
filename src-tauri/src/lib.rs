@@ -2,6 +2,7 @@ use tauri_plugin_prevent_default::Flags;
 
 mod settings;
 mod tmdb;
+mod tvdb;
 mod makemkv;
 mod sftp;
 mod models;
@@ -18,6 +19,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .manage(tmdb::service::TMDBService::new(reqwest::Client::new()))
+        .manage(tvdb::service::TVDBService::new(reqwest::Client::new()))
         .plugin(prevent)
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -25,6 +27,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             tmdb::get_tmdb_by_id,
             tmdb::search_tmdb,
+            tvdb::search_tvdb,
             makemkv::scan_disc,
             makemkv::rip_disc,
             sftp::send_sftp
