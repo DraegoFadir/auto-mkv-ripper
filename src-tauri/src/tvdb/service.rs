@@ -4,7 +4,7 @@ use reqwest::{Client, Response};
 use serde::{Deserialize, de::DeserializeOwned};
 use tokio::sync::Mutex;
 
-use crate::{models::Media, tvdb::response::TVDBResponseArray};
+use crate::{models::Media, tvdb::response::{TVDBResponse, TVDBResponseArray}};
 
 #[derive(Deserialize)]
 struct ApiResponse<T> {
@@ -53,24 +53,29 @@ impl TVDBService {
         let res: Response = client.get(url)
             .header("Authorization", format!("Bearer {token}"))
             .query(params)
-            .query(&[("type", "series")])
             .send()
             .await
             .and_then(|r| r.error_for_status())
             .into_ta_result()?;
 
-        res.json::<T>().await.into_ta_result()
+        let body: String = res.text().await.into_ta_result()?;
+        serde_json::from_str::<T>(&body).into_ta_result()
     }
 
     pub async fn get_by_search(&self, query: &str) -> TAResult<Vec<Media>> {
-        let response = self.get::<TVDBResponseArray>("/search", &[("query", query)]).await?;
+        let response = self.get::<TVDBResponseArray>("/search", &[("query", query), ("type", "series")]).await?;
 
         Ok(response.into())
     }
 
-    // pub async fn get_by_id(&self, id: u32) -> TAResult<Vec<Media>> {
-    //     let response = self.get::<TMDBResponse>(&format!("/movie/{id}"), &[]).await?;
+    pub async fn get_by_id(&self, id: u32) -> TAResult<Vec<Media>> {
+        let response = self.get::<ApiResponse<TVDBResponse>>(&format!("/series/{id}"), &[]).await?;
 
-    //     Ok(vec![response.into()])
-    // }
+        Ok(vec![response.data.into()])
+    }
+
+    pub async fn get_extended(&self, id: &str) -> TAResult<Vec<Media>> {
+        let response = self.get::<ApiResponse<TVDBResponse>>(&format!("/series/{id}/extended"), &[("meta", "episodes")]).await?;
+        Ok(vec![response.data.into()])
+    }
 }

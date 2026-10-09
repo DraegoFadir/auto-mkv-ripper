@@ -27,7 +27,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             tmdb::get_tmdb_by_id,
             tmdb::search_tmdb,
+            tvdb::get_tvdb_by_id,
             tvdb::search_tvdb,
+            tvdb::get_tvdb_extended,
             makemkv::scan_disc,
             makemkv::rip_disc,
             sftp::send_sftp

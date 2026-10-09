@@ -40,13 +40,14 @@
         }
 
         if(search.startsWith("id:")) {
-            if(!parseInt(search)){
+            let s = search.replace("id:", "")
+            if(!parseInt(s)){
                 return app.setAlert({
                     message: `Please enter a valid id when using the 'id:' prefix`,
                     type: 'error'
                 });
             }
-            results = await rust<Media[]>(cmd.byId, {id: parseInt(search.replace("id:", ""))}) ?? [];
+            results = await rust<Media[]>(cmd.byId, {id: parseInt(s)}) ?? [];
         } else {
             results = await rust<Media[]>(cmd.byQuery, { query: search }) ?? [];
         }

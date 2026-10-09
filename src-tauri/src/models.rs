@@ -1,3 +1,5 @@
+use anyhow_tauri::TAResult;
+use serde::{Deserialize, Deserializer};
 use ts_rs::TS;
 
 #[derive(Clone, serde::Serialize, TS)]
@@ -36,11 +38,45 @@ pub struct TMDBData {
 #[ts(export)]
 pub struct TVDBData {
     pub id: String,
-    pub name: String,
+    pub name: Option<String>,
     pub image_url: Option<String>,
-    pub year: Option<String>
+    pub year: Option<String>,
+    pub seasons: Vec<Season>,
+    pub episodes: Vec<Episode>
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TS)]
+#[ts(export)]
+pub struct Season {
+    id: u32,
+    number: u32,
+    name: Option<String>,
+    #[serde(rename = "type", deserialize_with = "inner_kind")]
+    pub season_type: String
+}
+
+fn inner_kind<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    struct Wrapper {
+        r#type: String,
+    }
+
+    Ok(Wrapper::deserialize(deserializer)?.r#type)
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TS)]
+#[ts(export)]
+pub struct Episode {
+    id: u32,
+    number: u32,
+    name: Option<String>,
+    image: String,
+    #[serde(alias = "seasonNumber")]
+    season_number: u32,
+}
 
 #[derive(Debug, Clone, serde::Serialize, TS)]
 #[serde(tag = "kind")]
