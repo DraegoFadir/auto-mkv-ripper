@@ -30,13 +30,13 @@ struct DiscInfoRow {
 }
 
 #[tauri::command]
-pub async fn scan_disc(app: AppHandle) -> TAResult<Vec<Title>> {
+pub async fn scan_disc(app: AppHandle, min_length: String) -> TAResult<Vec<Title>> {
     
     let settings: Settings = Settings::load(&app)?;
     let makemkv_path = settings.makemkv_path()?;
 
     let output = makemkvcon(makemkv_path)
-        .args(["-r", "--minlength=3600", "info", "disc:0"])
+        .args(["-r", &format!("--minlength={min_length}"), "info", "disc:0"])
         .output()
         .into_ta_result()?;
 
