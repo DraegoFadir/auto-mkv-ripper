@@ -1,6 +1,6 @@
 <script lang="ts">    
     import { app } from "$lib/app.svelte";
-    import type { Title } from "../../../bindings/Title";
+    import type { Title } from "../../bindings/Title";
     import prettyBytes from "pretty-bytes";
     import { rust } from "$lib/rust.svelte";
 
@@ -9,12 +9,14 @@
     let loading: boolean = $state(false);
     let titles: Title[] = $state([])
 
-    const atLimit = $derived(app.state.titlesSelected.length >= app.state.mediaSelected.length);
+    const atLimit = $derived(app.state.titlesSelected.length >= app.state.mediaSelected.length && app.state.mediaType === "movie");
 
     async function startScan() {
         loading = true;
 
-        const result = await rust<Title[]>("scan_disc", { });
+        const minLength = app.state.mediaType === "movie" ? "3600" : "1320"
+
+        const result = await rust<Title[]>("scan_disc", { minLength });
 
         if(result) {
             titles = result;
@@ -38,7 +40,11 @@
     {#if titles.length > 0}
         <hgroup>
             <h2>Select Titles to Map</h2>
-            <p>{app.state.titlesSelected.length} of {app.state.mediaSelected.length} titles selected</p>
+            {#if app.state.mediaType === "movie"}
+                <p>{app.state.titlesSelected.length} of {app.state.mediaSelected.length} titles selected</p>
+            {:else}
+                <p>{app.state.titlesSelected.length} titles selected</p>
+            {/if}
         </hgroup>
         <fieldset>
             {#each titles as title}
