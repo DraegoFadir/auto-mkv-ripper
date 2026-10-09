@@ -10,22 +10,50 @@
     let loading: boolean = $state(false);
     let results: Media[] = $state([])
 
-    async function getMovie(event: SubmitEvent) {
+    let cmd: { byId: string, byQuery: string } | void = $derived.by(() => {
+        switch(app.state.mediaType) {
+            case "movie":
+                return { byId: "get_tmdb_by_id", byQuery: "search_tmdb" }
+            case "tv-show":
+            case "anime":
+                return { byId: "get_tvdb_by_id", byQuery: "search_tvdb" }
+            default:
+                return app.setAlert({
+                    message: `Select a valid Media Type`,
+                    type: 'error'
+                });
+        }
+    });
+
+    async function getMedia(event: SubmitEvent) {
         event.preventDefault();
 
         results = [];
         app.resetAlert();
 
-        if(search.startsWith("id:")) {
-            results = await rust<Media[]>("get_tmdb_by_id", {tmdbId: parseInt(search.replace("id:", ""))}) ?? [];
-        } else {
-            results = await rust<Media[]>("search_tmdb", { query: search }) ?? [];
+        search = search.trim();
+        if(!search || !cmd) {
+            return app.setAlert({
+                message: `Please enter a valid search term`,
+                type: 'error'
+            });
         }
 
+        if(search.startsWith("id:")) {
+            if(!parseInt(search)){
+                return app.setAlert({
+                    message: `Please enter a valid id when using the 'id:' prefix`,
+                    type: 'error'
+                });
+            }
+            results = await rust<Media[]>(cmd.byId, {id: parseInt(search.replace("id:", ""))}) ?? [];
+        } else {
+            results = await rust<Media[]>(cmd.byQuery, { query: search }) ?? [];
+        }
     }
 </script>
 
-<form role="search" onsubmit={getMovie}>
+<form role="search" onsubmit={getMedia}>
     <select name="media-format" aria-label="Select Media Format" required bind:value={app.state.mediaType}>
         <option value="movie">Movie</option>
         <option value="tv-show">TV Show</option>
@@ -58,27 +86,28 @@
         </main>
     </article>
 
-
     <article>
         <header>
             <h2>Selected Media</h2>
             {app.state.mediaSelected.length} Selected
         </header>
 
-        {#if app.state.mediaSelected.length > 0}
-            {#each app.state.mediaSelected as m (m.id)}
-                <label class="media-select-label">
-                    <MediaCardComponent media={m} alignChildrenEnd>
-                        <input type="checkbox" name={`${m.id}`} bind:group={app.state.mediaSelected} value={m} />
-                    </MediaCardComponent>
-                </label>
-            {/each}
-        {:else}
-            <hgroup>
-                <h3>No Media Selected</h3>
-                <p>Please search for media and add it from the select list</p>
-            </hgroup>
-        {/if}
+        <main>
+            {#if app.state.mediaSelected.length > 0}
+                {#each app.state.mediaSelected as m (m.id)}
+                    <label class="media-select-label">
+                        <MediaCardComponent media={m} alignChildrenEnd>
+                            <input type="checkbox" name={`${m.id}`} bind:group={app.state.mediaSelected} value={m} />
+                        </MediaCardComponent>
+                    </label>
+                {/each}
+            {:else}
+                <hgroup>
+                    <h3>No Media Selected</h3>
+                    <p>Please search for media and add it from the select list</p>
+                </hgroup>
+            {/if}
+        </main>
 
     </article>
     
@@ -90,12 +119,21 @@
     .flex-row {
         display: flex;
         gap: 1rem;
-        align-items: flex-start;
+        max-height: calc(100vh - 435px);
     }
 
     .flex-row > article {
         flex: 1;
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .flex-row > article main {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
     }
 
     article header {

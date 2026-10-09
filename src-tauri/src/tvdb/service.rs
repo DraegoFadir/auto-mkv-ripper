@@ -4,6 +4,8 @@ use reqwest::{Client, Response};
 use serde::{Deserialize, de::DeserializeOwned};
 use tokio::sync::Mutex;
 
+use crate::{models::Media, tvdb::response::TVDBResponseArray};
+
 #[derive(Deserialize)]
 struct ApiResponse<T> {
     data: T,
@@ -44,27 +46,27 @@ impl TVDBService {
         }
     }
     
-    // async fn get<T: DeserializeOwned>(&self, path: &str, params: &[(&str, &str)]) -> TAResult<T> {
-    //     let token = self.get_token().await?;
-    //     let client = &self.client;
-    //     let url = format!("{base}{path}", base = self.base_url);
-    //     let res: Response = client.get(url)
-    //         .header("authorization", format!("Bearer {token}"))
-    //         .query(params)
-    //         .query(&[("api_key", dotenv!("TMDB_API_KEY"))])
-    //         .send()
-    //         .await
-    //         .and_then(|r| r.error_for_status())
-    //         .into_ta_result()?;
+    async fn get<T: DeserializeOwned>(&self, path: &str, params: &[(&str, &str)]) -> TAResult<T> {
+        let token = self.get_token().await?;
+        let client = &self.client;
+        let url = format!("{base}{path}", base = self.base_url);
+        let res: Response = client.get(url)
+            .header("Authorization", format!("Bearer {token}"))
+            .query(params)
+            .query(&[("type", "series")])
+            .send()
+            .await
+            .and_then(|r| r.error_for_status())
+            .into_ta_result()?;
 
-    //     res.json::<T>().await.into_ta_result()
-    // }
+        res.json::<T>().await.into_ta_result()
+    }
 
-    // pub async fn get_by_search(&self, query: &str) -> TAResult<Vec<Media>> {
-    //     let response = self.get::<TMDBResponseArray>("/search/movie", &[("query", query)]).await?;
+    pub async fn get_by_search(&self, query: &str) -> TAResult<Vec<Media>> {
+        let response = self.get::<TVDBResponseArray>("/search", &[("query", query)]).await?;
 
-    //     Ok(response.into())
-    // }
+        Ok(response.into())
+    }
 
     // pub async fn get_by_id(&self, id: u32) -> TAResult<Vec<Media>> {
     //     let response = self.get::<TMDBResponse>(&format!("/movie/{id}"), &[]).await?;

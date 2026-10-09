@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::Media;
+use crate::models::{Media, TMDBData};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TMDBResponse {
@@ -12,7 +12,7 @@ pub struct TMDBResponse {
 
 impl From<TMDBResponse> for Media {
     fn from(res: TMDBResponse) -> Self {
-        Media { id: res.id, title: res.title, poster_path: res.poster_path, release_date: res.release_date }
+        Media::Movie(TMDBData { id: res.id, title: res.title, poster_path: res.poster_path, release_date: res.release_date })
     }
 }
 

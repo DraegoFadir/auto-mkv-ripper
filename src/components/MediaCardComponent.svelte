@@ -9,8 +9,15 @@
 
 <article {...rest}>
     <div class="movie-details">
-        <img src="https://image.tmdb.org/t/p/w342/{media.poster_path}" alt="{media.title}" />
-        <p>{media.title} ({media.release_date.substring(0, 4)})</p>
+        {#if media.kind === "Movie"}
+            <img src="https://image.tmdb.org/t/p/w342/{media.poster_path}" alt="{media.title}" />
+            <p>{media.title} ({media.release_date?.substring(0, 4)})</p>
+        {/if}
+
+        {#if media.kind === "Series"}
+            <img src="{media.image_url}" alt="{media.name}" />
+            <p>{media.name} ({media.year})</p>
+        {/if}
         <div class:end={alignChildrenEnd}>
             {@render children?.()}
         </div>
