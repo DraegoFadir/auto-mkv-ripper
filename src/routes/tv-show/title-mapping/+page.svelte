@@ -70,7 +70,14 @@
     </main>
 </article>
 {#each app.state.titlesMapped as map(map.title.index)}
-<MediaCardComponent media={app.state.mediaSelected[0]} >
+<MediaCardComponent media={map.media}>
+    {#snippet titleInfo()}
+        <div>
+            <kbd>Title Index: {map.title.index}</kbd>
+            <kbd>Duration: {map.title.duration}</kbd>
+            <kbd>Chapters: {map.title.chapters}</kbd>
+        </div>
+    {/snippet}
     <select name="Season" aria-label="Season" bind:value={map.episode!.season}>
         {#each media.seasons as season(season.id)}
             <option value={season.number}>Season {String(season.number).padStart(2, "0")} - {season.name}</option>
@@ -89,18 +96,5 @@
         display: flex;
         gap: 1rem;
         align-items: flex-start;
-    }
-
-    .col {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .grow {
-        flex: 1;
-    }
-
-    .column-half {
-        width: 50%
     }
 </style>

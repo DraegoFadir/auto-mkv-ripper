@@ -3,7 +3,7 @@
     import type { HTMLAttributes } from "svelte/elements";
     import type { Media } from "../bindings/Media";
 
-    let { media, alignChildrenEnd = false, children, ...rest } : { media: Media, alignChildrenEnd?: boolean, children?: Snippet } & HTMLAttributes<HTMLElement> = $props();
+    let { media, alignChildrenEnd = false, children, titleInfo, ...rest } : { media: Media, alignChildrenEnd?: boolean, children?: Snippet, titleInfo?: Snippet } & HTMLAttributes<HTMLElement> = $props();
 </script>
 
 
@@ -11,12 +11,18 @@
     <div class="movie-details">
         {#if media.kind === "Movie"}
             <img src="https://image.tmdb.org/t/p/w342/{media.poster_path}" alt="{media.title}" />
-            <p>{media.title} ({media.release_date?.substring(0, 4)})</p>
+            <div>
+                <p>{media.title} ({media.release_date?.substring(0, 4)})</p>
+                {@render titleInfo?.()}
+            </div>
         {/if}
 
         {#if media.kind === "Series"}
             <img src="{media.image_url}" alt="{media.name}" />
-            <p>{media.name} ({media.year})</p>
+            <div class="info">
+                <p>{media.name} ({media.year})</p>
+                {@render titleInfo?.()}
+            </div>
         {/if}
         <div class:end={alignChildrenEnd}>
             {@render children?.()}
@@ -57,5 +63,11 @@
     .end {
         display: flex;
         justify-content: flex-end;
+    }
+
+    .info {
+        display: flex;
+        flex-direction: column;
+        gap: .25rem;
     }
 </style>

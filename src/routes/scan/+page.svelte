@@ -56,24 +56,12 @@
                             bind:group={app.state.titlesSelected} 
                             value={title}   
                             disabled={atLimit && !app.state.titlesSelected.includes(title)} />
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th scope="col">Index</th>
-                                    <th scope="col">Duration</th>
-                                    <th scope="col">Chapters</th>
-                                    <th scope="col">Size (GiB)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th scope="row">{title.index}</th>
-                                    <td>{title.duration}</td>
-                                    <td>{title.chapters}</td>
-                                    <td>{prettyBytes(title.size_bytes ?? 0, { binary: true })}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="title-info grid">
+                            <kbd>Index: {title.index}</kbd>
+                            <kbd>Duration: {title.duration}</kbd>
+                            <kbd>Chapters: {title.chapters}</kbd>
+                            <kbd>Size: {prettyBytes(title.size_bytes ?? 0, { binary: true })}</kbd>
+                        </div>
                     </article>
                 </label>
             {/each}
@@ -100,7 +88,8 @@
         gap: 5rem;
     }
 
-    article table {
-        margin-bottom: 0;
+    .title-info {
+        flex: 1;
+        justify-items: end;
     }
 </style>
