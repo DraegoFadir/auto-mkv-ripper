@@ -12,9 +12,15 @@ export type Progress = {
     max: number
 }
 
+export type Episode = {
+    season: number,
+    episode: number
+}
+
 export type TitleMap = {
     title: Title;
     media: Media;
+    episode?: Episode;
     ripStatus?: Status;
     ripProgress?: Progress;
     sftpStatus?: Status;
@@ -58,7 +64,7 @@ class AppState {
         switch(this.state.currentStep) {
             case "search": {
                 if (this.state.mediaSelected.length > 0) {
-                    return this.go("scan");
+                    return goto("/scan");
                 }
             }
             case "scan": {
@@ -66,7 +72,7 @@ class AppState {
                     return;
                 }
 
-                if (this.state.mediaSelected.length > 1) {
+                if (this.state.titlesSelected.length > 1 || this.state.mediaSelected.length > 1) {
                     this.state.titlesMapped = defaults().titlesMapped;
                     return this.go("title-mapping");
                 }
