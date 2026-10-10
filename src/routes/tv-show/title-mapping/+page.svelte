@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { app } from "$lib/app.svelte";
-    import { onMount } from "svelte";
+    import { app, type TitleMap } from "$lib/app.svelte";
+    import { onDestroy, onMount } from "svelte";
     import MediaCardComponent from "../../../components/MediaCardComponent.svelte";
     import { rust } from "$lib/rust.svelte";
     import type { Media } from "../../../bindings/Media";
@@ -12,6 +12,9 @@
     let defaultEpisode = $state(1);
     let loading = $state(false);
     let media = $derived(app.state.mediaSelected[0] as Extract<Media, { kind: "Series" }>);
+    let episodes = $derived(media.episodes?.filter((x) => x.season_number === defaultSeason));
+
+    let mapping = $derived.by(mapValidation);
 
     onMount(async () => {
         loading = true;
@@ -23,6 +26,16 @@
             loading = false;
         }
     });
+
+    onMount(() => {
+        app.validator = () => {
+            if(mapping.some((x) => x.error)) {
+                let numInvalid = mapping.filter((x) => x.error).length;
+                return `${numInvalid} episodes not mapped correctly`;
+            }
+        }
+    });
+    onDestroy(() => { app.validator = undefined; })
 
     $effect(() => {
         updateDefaultMap();
@@ -38,7 +51,31 @@
         }
 
         app.state.titlesMapped = app.state.titlesSelected.map((title) => {
-            let map = { media, title, episode: { season: defaultSeason, episode: defaultEpisode + title.index } };
+            let episodeNumber: number | undefined = defaultEpisode + title.index;
+            let map: TitleMap = { media, title, episode: { season: defaultSeason, episode: episodeNumber }};
+            return map;
+        });
+    }
+
+    function mapValidation(): TitleMap[] {
+        return app.state.titlesMapped.map((map, _index, mapped) => {
+            if (!map.episode || !map.episode.episode) {
+                const error = "Invalid episode mapping";
+                return { ...map, error };
+            }
+            
+            if (map.episode.episode > episodes.length) {
+                const error = "Invalid episode selection";
+                return { ...map, error };
+            }
+
+            if (mapped.some((x, index) => index !== _index && JSON.stringify(x.episode) === JSON.stringify(map.episode))) {
+                console.log(map.episode)
+                console.log(mapped.some((x) => JSON.stringify(x.episode) === JSON.stringify(map.episode)))
+                const error = "Duplicate episode detected"
+                return { ...map, error };
+            }
+
             return map;
         });
     }
@@ -62,14 +99,14 @@
                 {/each}
             </select>
             <select name="First Episode" aria-label="First Episode" bind:value={defaultEpisode} onchange={updateDefaultMap}>
-                {#each media.episodes?.filter((x) => x.season_number === defaultSeason) as episode(episode.id) }
+                {#each episodes as episode(episode.id) }
                     <option value={episode.number}>Episode {String(episode.number).padStart(2, "0")} - {episode.name}</option>
                 {/each}
             </select>
         </form>
     </main>
 </article>
-{#each app.state.titlesMapped as map(map.title.index)}
+{#each mapping as map(map.title.index)}
 <MediaCardComponent media={map.media}>
     {#snippet titleInfo()}
         <div>
@@ -83,11 +120,13 @@
             <option value={season.number}>Season {String(season.number).padStart(2, "0")} - {season.name}</option>
         {/each}
     </select>
-    <select name="Episode" aria-label="Episode" bind:value={map.episode!.episode}>
-        {#each media.episodes?.filter((x) => x.season_number === map.episode!.season) as episode(episode.id) }
+    <select name="Episode" aria-label="Episode" bind:value={map.episode!.episode} aria-invalid={map.error ? true : undefined} aria-describedby="invalid-episode">
+        {#each episodes as episode(episode.id) }
             <option value={episode.number}>Episode {String(episode.number).padStart(2, "0")} - {episode.name}</option>
         {/each}
     </select>
+    {#if map.error}<small id="invalid-episode">{map.error}</small>{/if}
+
 </MediaCardComponent>
 {/each}
 
