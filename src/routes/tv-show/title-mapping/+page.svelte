@@ -62,9 +62,9 @@
             return;
         }
 
-        // if(defaultEpisode > episodes.length) {
-        //     defaultEpisode = 1
-        // };
+        if(defaultEpisode > episodes.length) {
+            defaultEpisode = 1
+        };
 
         app.state.titlesMapped = app.state.titlesSelected.map((title) => {
             let episodeNumber: number | undefined = defaultEpisode + title.index;
