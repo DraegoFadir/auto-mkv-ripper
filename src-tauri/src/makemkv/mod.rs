@@ -75,7 +75,7 @@ pub async fn scan_disc(app: AppHandle, min_length: String) -> TAResult<Vec<Title
 
 
 #[tauri::command]
-pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<bool> {
+pub async fn rip_disc(title_index: u32, app: AppHandle, min_length: String) -> TAResult<bool> {
 
     let settings: Settings = Settings::load(&app)?;
     let makemkv_path = settings.makemkv_path()?;
@@ -83,7 +83,7 @@ pub async fn rip_disc(title_index: u32, app: AppHandle) -> TAResult<bool> {
 
     std::fs::create_dir_all(&output).into_ta_result()?;
     let mut child: Child = makemkvcon(makemkv_path)
-        .args(["-r", "--progress=-same", "--minlength=3600", "mkv", "disc:0", &title_index.to_string(), output.as_str()])
+        .args(["-r", "--progress=-same", &format!("--minlength={min_length}"), "mkv", "disc:0", &title_index.to_string(), output.as_str()])
         .stdout(Stdio::piped())
         .spawn()
         .into_ta_result()?;
