@@ -7,8 +7,9 @@ A desktop app for automating MakeMKV. A quick up front setup lets you rip and up
 - Scan and rip Blu-ray discs via MakeMKV (`makemkvcon`)
 - TMDB/TVDB Lookup
 - Movie Data and Title Mapping for automation
+- Series Data and Episode Mapping for automation
 - Configurable MakeMKV path, output directory, and TMDB API key
-- Upcoming upload to SFTP for Jellyfin/Plex media servers or Cloud Storage.
+- upload to SFTP for Jellyfin media servers or Cloud Storage.
 - Cross-platform: Windows and Linux
 
 ## Installation
