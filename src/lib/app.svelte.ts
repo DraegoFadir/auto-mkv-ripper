@@ -12,13 +12,20 @@ export type Progress = {
     max: number
 }
 
+export type Episode = {
+    season: number | undefined,
+    episode: number | undefined
+}
+
 export type TitleMap = {
     title: Title;
     media: Media;
+    episode?: Episode;
     ripStatus?: Status;
     ripProgress?: Progress;
     sftpStatus?: Status;
     sftpProgress?: Progress;
+    error?: string;
 }
 
 export type Alert = {
@@ -51,14 +58,21 @@ class AppState {
     state: AppStateType = $state<AppStateType>(defaults())
  
     go = (route: Step) => goto(`/${this.state.mediaType}/${route}`);
+    validator: (() => string | undefined) | undefined;
     next = () => {
         this.resetAlert();
+
+        const error = this.validator?.();
+        if(error) {
+            this.setAlert({ message: error, type: "error" });
+            return;
+        }
         
         // Search -> Scan -> Title Mapping -> Rip -> Finish
         switch(this.state.currentStep) {
             case "search": {
                 if (this.state.mediaSelected.length > 0) {
-                    return this.go("scan");
+                    return goto("/scan");
                 }
             }
             case "scan": {
@@ -66,7 +80,7 @@ class AppState {
                     return;
                 }
 
-                if (this.state.mediaSelected.length > 1) {
+                if (this.state.titlesSelected.length > 1 || this.state.mediaSelected.length > 1) {
                     this.state.titlesMapped = defaults().titlesMapped;
                     return this.go("title-mapping");
                 }
@@ -79,9 +93,7 @@ class AppState {
                 return this.go("rip");
             }
             case "title-mapping": {
-                if (this.state.titlesMapped.length > 0) {
-                    return this.go("rip");
-                }
+                return this.go("rip");
             }
             case "rip": {
                 const isRipping = this.state.titlesMapped.some((x) => x.ripStatus !== "done" && x.ripStatus !== "failed");

@@ -34,6 +34,7 @@ anyhow-tauri = "1.0.1"
 anyhow = "1.0.104"
 tauri-plugin-prevent-default = "6.0.0"
 dotenvy_macro = "0.15"
+serde-aux = "4.7.0"
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]
