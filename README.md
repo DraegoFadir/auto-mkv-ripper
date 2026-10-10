@@ -29,16 +29,11 @@ Grab the latest release for your platform from the [Releases](../../releases) pa
 
 ## Roadmap
 
-### v0.4.0 — TV Shows
-- [ ] TVDB lookup
-- [ ] TV season support
-- [ ] Episode mapping
-
-### v0.5.0 — Anime & Public Beta
+### v0.5.0 — Anime
 - [ ] TVDB lookup for anime
 - [ ] Anime episode mapping
-- [ ] Discs with combined episode files will try to find the best chapter split by average episode length
-- [ ] Ability to split SUB and DUB
+- [ ] Chapter splitting for discs with combined episode files (via MKVToolNix/`mkvmerge`)
+- [ ] Optional SUB/DUB splitting
 - [ ] Movies, TV, and anime fully supported; ready for wider testing and feedback
 
 ### v1.0.0 — Stable Release
@@ -48,6 +43,14 @@ Grab the latest release for your platform from the [Releases](../../releases) pa
 
 ### Beyond v1.0
 - [ ] SFTP media management (browse and manage media already on the server)
+- [ ] Custom output folders and file names
+- [ ] Retry individual mapped titles
+
+## Known Issues
+
+- The **Stop** button on mapped titles on the Rip page is currently disabled.
+- The **Reset** button is still clickable during a rip or upload.
+- Mapped titles aren't validated before ripping. If two titles map to the same episode, the later one will overwrite the earlier file, so double-check your mapping before starting.
 
 ## Development
 
