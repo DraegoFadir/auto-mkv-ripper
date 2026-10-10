@@ -10,7 +10,7 @@ use russh_sftp::client::SftpSession;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use ts_rs::TS;
 use tokio::fs::File as LocalFile;
-use crate::{models::{Status, TitleProgress, TitleStatus}, settings::Settings};
+use crate::{models::{Status, TitleProgress, TitleStatus}, settings::{self, Settings}};
 
 struct Client;
 
@@ -36,10 +36,22 @@ impl russh::client::Handler for Client {
 
 #[derive(Default, Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub enum MediaType {
+    #[default]
+    Movie, 
+    Series, 
+    Anime
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Sftp {
     local_path: String,
     remote_path: String,
     file_path: String,
+    media_type: MediaType,
+    #[ts(optional)]
+    split_path: Option<String>,
 }
 
 #[tauri::command]
@@ -80,20 +92,51 @@ pub async fn send_sftp(app: AppHandle, title_index: u32, sftp: Sftp)  -> TAResul
 
 async fn run_sftp(app: &AppHandle, title_index: u32, sftp: &Sftp, sftp_session: SftpSession) -> TAResult<()> {
 
+    let settings: Settings = Settings::load(&app)?;
+    
     let mut local = LocalFile::open(&sftp.local_path).await.into_ta_result()?;
     let total = local.metadata().await.into_ta_result()?.len();
     if total == 0 {
         anyhow_tauri::bail!("File is empty");
     }
 
-    if !sftp_session.try_exists(&sftp.remote_path).await.into_ta_result()? {
-        sftp_session.create_dir(&sftp.remote_path).await
-            .context("Failed to create the remote directory")
-            .into_ta_result()?;
+
+    let mut remote: String;
+    match sftp.media_type {
+        MediaType::Movie => remote = settings.sftp_movie_path()?,
+        MediaType::Series => remote = settings.sftp_tvshow_path()?,
+        MediaType::Anime => remote = settings.sftp_anime_path()?,
+        _ => anyhow_tauri::bail!("invalid media_type"),
     }
 
+    
+    // If you find this setting, cool
+    // This is not going to be officially documented but was made to fit how i upload
+    if remote.contains("~split") {
+        if let Some(value) = &sftp.split_path {
+            remote = remote.replace("~split", &value);
+        }
+    }
+
+    let mut path: String = remote.into();
+    let parts = sftp.remote_path.split("/");
+    for part in parts {
+        if !path.is_empty() {
+            path.push('/');
+        }
+
+        path.push_str(part);
+
+        if !sftp_session.try_exists(&path).await.into_ta_result()? {
+            sftp_session.create_dir(&path).await
+                .with_context(|| format!("Failed to create the remote directory: {path}{}", sftp.remote_path))
+                .into_ta_result()?;
+        }
+    }
+    
+
     let mut remote = sftp_session
-        .create(format!("{}/{}", &sftp.remote_path, &sftp.file_path))
+        .create(format!("{}/{}", &path, &sftp.file_path))
         .await
         .into_ta_result()?;
 

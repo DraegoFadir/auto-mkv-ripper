@@ -4,7 +4,6 @@
     import MediaCardComponent from "../../../components/MediaCardComponent.svelte";
     import { rust } from "$lib/rust.svelte";
     import type { Media } from "../../../bindings/Media";
-    import type { TVDBData } from "../../../bindings/TVDBData";
 
     app.state.currentStep = "title-mapping";
 
@@ -14,12 +13,11 @@
     let media = $derived(app.state.mediaSelected[0] as Extract<Media, { kind: "Series" }>);
     let episodes = $derived(media.episodes?.filter((x) => x.season_number === defaultSeason));
 
-    let mapping = $derived.by(mapValidation);
-
     onMount(async () => {
         loading = true;
         try {
             await fetchExtendedData();
+            updateDefaultMap()
         } catch(e) {
             console.log(e)
         } finally {
@@ -29,8 +27,8 @@
 
     onMount(() => {
         app.validator = () => {
-            if(mapping.some((x) => x.error)) {
-                let numInvalid = mapping.filter((x) => x.error).length;
+            if(app.state.titlesMapped.some((x) => x.error)) {
+                let numInvalid = app.state.titlesMapped.filter((x) => x.error).length;
                 return `${numInvalid} episodes not mapped correctly`;
             }
         }
@@ -38,8 +36,22 @@
     onDestroy(() => { app.validator = undefined; })
 
     $effect(() => {
-        updateDefaultMap();
-    })
+        const maps = app.state.titlesMapped;
+
+        maps.forEach((map, _index) => {
+            let error: string | undefined;
+
+            if (!map.episode || !map.episode.episode) {
+                error = "Invalid episode mapping";
+            } else if (map.episode.episode > episodes.length) {
+                error = "Invalid episode selection";
+            } else if (maps.some((x, index) => index !== _index && JSON.stringify(x.episode) === JSON.stringify(map.episode))) {
+                error = "Duplicate episode detected"
+            }
+
+            map.error = error;
+        });
+    });
 
     async function fetchExtendedData() {
         app.state.mediaSelected = await rust<Media[]>("get_tvdb_extended", { id: media.id }) ?? [];
@@ -50,32 +62,13 @@
             return;
         }
 
+        // if(defaultEpisode > episodes.length) {
+        //     defaultEpisode = 1
+        // };
+
         app.state.titlesMapped = app.state.titlesSelected.map((title) => {
             let episodeNumber: number | undefined = defaultEpisode + title.index;
-            let map: TitleMap = { media, title, episode: { season: defaultSeason, episode: episodeNumber }};
-            return map;
-        });
-    }
-
-    function mapValidation(): TitleMap[] {
-        return app.state.titlesMapped.map((map, _index, mapped) => {
-            if (!map.episode || !map.episode.episode) {
-                const error = "Invalid episode mapping";
-                return { ...map, error };
-            }
-            
-            if (map.episode.episode > episodes.length) {
-                const error = "Invalid episode selection";
-                return { ...map, error };
-            }
-
-            if (mapped.some((x, index) => index !== _index && JSON.stringify(x.episode) === JSON.stringify(map.episode))) {
-                console.log(map.episode)
-                console.log(mapped.some((x) => JSON.stringify(x.episode) === JSON.stringify(map.episode)))
-                const error = "Duplicate episode detected"
-                return { ...map, error };
-            }
-
+            let map: TitleMap = { id: crypto.randomUUID(), media, title, episode: { season: defaultSeason, episode: episodeNumber }};
             return map;
         });
     }
@@ -106,7 +99,7 @@
         </form>
     </main>
 </article>
-{#each mapping as map(map.title.index)}
+{#each app.state.titlesMapped as map(map.id)}
 <MediaCardComponent media={map.media}>
     {#snippet titleInfo()}
         <div>

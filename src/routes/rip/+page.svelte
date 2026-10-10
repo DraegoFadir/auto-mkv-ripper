@@ -1,11 +1,13 @@
 <script lang="ts">
     import { app, type DiscType, type Progress, type TitleMap } from "$lib/app.svelte";
-    import MediaCardComponent from "../../../components/MediaCardComponent.svelte";
     import { listen } from "@tauri-apps/api/event";
     import { settings } from "$lib/settings.svelte";
-    import type { Sftp } from "../../../bindings/Sftp";
     import { rust } from "$lib/rust.svelte";
-    import type { TitleStatus } from "../../../bindings/TitleStatus";
+    import type { TitleStatus } from "../../bindings/TitleStatus";
+    import type { Sftp } from "../../bindings/Sftp";
+    import MediaCardComponent from "../../components/MediaCardComponent.svelte";
+    import type { TMDBData } from "../../bindings/TMDBData";
+    import type { TVDBData } from "../../bindings/TVDBData";
 
     app.state.currentStep = "rip";
 
@@ -55,7 +57,8 @@
                     title.ripProgress = e.payload;
                 });
 
-                ok = await rust<boolean>("rip_disc", { titleIndex: title.title.index })
+                const minLength = app.state.mediaType === "movie" ? "3600" : "1320"
+                ok = await rust<boolean>("rip_disc", { titleIndex: title.title.index, minLength })
                 unlisten();
             }
 
@@ -76,12 +79,10 @@
             return;
         }
 
-        const movie = map.media;
-        const year = movie.release_date.substring(0, 4);
+        const media = map.media;
 
-        const name = `${movie.title} (${year}) [tmdbid-${movie.id}]`;
 
-        const quality_map: Record<DiscType, String> = {
+        const quality_map: Record<DiscType, string> = {
             "dvd": "480p",
             "bluray": "1080p",
             "4k": "2160p"
@@ -90,30 +91,59 @@
         const quality = quality_map[app.state.discType];
 
         // TODO: Add settings access to rust
-        const sftp: Sftp = {
-            local_path: `${settings.output_directory}/${map.title.file_name}`,
-            remote_path: `${settings.sftp_movie_path}/${name}`,
-            file_path: `${name} - ${quality}.mkv`
+        let sftp: Sftp | null = null;
+        
+        const local_path = `${settings.output_directory}/${map.title.file_name}`;
+
+        switch(media.kind) {
+            case "Movie": {
+                const movie = media as TMDBData;
+                const year = movie.release_date?.substring(0, 4) ?? "0000";
+                const name = `${movie.title} (${year}) [tmdbid-${movie.id}]`;
+                sftp = {
+                    local_path,
+                    remote_path: `${name}`,
+                    file_path: `${name} - ${quality}.mkv`,
+                    media_type: media.kind,
+                    split_path: `/_${app.state.discType}`
+                }
+                break;
+            }
+            case "Series": {
+                const series = media as TVDBData;
+                const year = series.year;
+                const name = `${series.name} (${year}) [tvdbid-${series.id}]`;
+                const seasonStr = String(map.episode?.season).padStart(2, "0");
+                const episodeStr = String(map.episode?.episode).padStart(2, "0");
+                sftp = {
+                    local_path,
+                    remote_path: `${name}/Season ${seasonStr}`,
+                    file_path: `${series.name} - S${seasonStr}E${episodeStr} - ${quality}.mkv`,
+                    media_type: media.kind
+                }
+                break;
+            }
+            default:
+                app.setAlert({ message: "Invalid media kind", type: "error" });
         }
 
-        // If you find this setting, cool
-        // This is not going to be officially documented but was made to fit how i upload
-        if(settings.sftp_movie_path.includes("~split")) {
-            sftp.remote_path = sftp.remote_path.replace("~split", `/_${app.state.discType}`)
+        if(sftp) {
+            const unlisten = await listen<Progress>("sftp-progress", (e) => {
+                map.sftpProgress = e.payload;
+            });
+
+            await rust("send_sftp", { sftp, titleIndex: map.title.index })
+            unlisten();
         }
-
-        const unlisten = await listen<Progress>("sftp-progress", (e) => {
-            map.sftpProgress = e.payload;
-        });
-
-        await rust("send_sftp", { sftp, titleIndex: map.title.index })
-        unlisten();
     }
 
 </script>
 
-<h1>Rip</h1>
-<input type="button" value="Start Rip" onclick={beginRip} disabled={started} />
+<hgroup>
+    <h1>Rip & Upload</h1>
+    <p>Check your mapping, then press start. Ripping, uploading, and Jellyfin naming are handled for you</p>
+</hgroup>
+<input type="button" value="Start Rip & Upload" onclick={beginRip} disabled={started} />
 {#snippet progress(p?: Progress)}
     {#if !p}
         <p class="danger">progress error</p>
@@ -124,8 +154,16 @@
     {/if}
 {/snippet}
 
-{#each app.state.titlesMapped as title(title.media.id)}
+{#each app.state.titlesMapped as title(title.id)}
     <MediaCardComponent media={title.media}>
+
+        {#snippet titleInfo()}
+            <div>
+                <kbd>Season {String(title.episode?.season).padStart(2, "0")}</kbd>
+                <kbd>Episode {String(title.episode?.episode).padStart(2, "0")}</kbd>
+            </div>
+        {/snippet}
+
         {#if title.ripStatus === "started"}
             Ripping
             {@render progress(title.ripProgress)}

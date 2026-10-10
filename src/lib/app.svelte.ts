@@ -18,6 +18,7 @@ export type Episode = {
 }
 
 export type TitleMap = {
+    id: string;
     title: Title;
     media: Media;
     episode?: Episode;
@@ -80,20 +81,24 @@ class AppState {
                     return;
                 }
 
-                if (this.state.titlesSelected.length > 1 || this.state.mediaSelected.length > 1) {
-                    this.state.titlesMapped = defaults().titlesMapped;
-                    return this.go("title-mapping");
-                }
+                if(this.state.mediaType === "movie") {
+                    if (this.state.titlesSelected.length === 1 && this.state.mediaSelected.length === 1) {
+                        this.state.titlesMapped = defaults().titlesMapped;
 
-                // Only 1 media selected, Just map to 1 title
-                this.state.titlesMapped = [{
-                    title: this.state.titlesSelected[0],
-                    media: this.state.mediaSelected[0]
-                }];
-                return this.go("rip");
+                        // Only 1 media selected, Just map to 1 title
+                        this.state.titlesMapped = [{
+                            id: crypto.randomUUID(),
+                            title: this.state.titlesSelected[0],
+                            media: this.state.mediaSelected[0],
+                        }];
+                        return goto("/rip");
+                    }
+                }
+                
+                return this.go("title-mapping");
             }
             case "title-mapping": {
-                return this.go("rip");
+                return goto("/rip");
             }
             case "rip": {
                 const isRipping = this.state.titlesMapped.some((x) => x.ripStatus !== "done" && x.ripStatus !== "failed");
@@ -110,7 +115,10 @@ class AppState {
         }
     }
 
-    reset = () => { this.state = defaults(); goto("/"); }
+    reset = async () => { 
+        await goto("/"); 
+        this.state = defaults(); 
+    }
     
     resetAlert = () => { this.state.alert = defaults().alert }
     setAlert = (alert: Alert) => { 

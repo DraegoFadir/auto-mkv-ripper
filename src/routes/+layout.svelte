@@ -1,7 +1,7 @@
 <script lang="ts">
     import "@picocss/pico/css/pico.violet.min.css"
     import {onMount} from "svelte";
-    import { ChevronRight, Save, Settings } from "@lucide/svelte";
+    import { ChevronRight, RotateCcw, Save, Settings } from "@lucide/svelte";
 
     import DrawerComponent from "../components/DrawerComponent.svelte";
     import SettingsFormComponent from "../components/SettingsFormComponent.svelte";
@@ -63,7 +63,8 @@
     </div>
 {/if}
 
-<footer class="container-fluid">
+<footer class="container-fluid flex-between">
+    <button onclick={() => app.reset()}><RotateCcw /> Reset</button>
     <button onclick={() => app.next()}>{app.state.currentStep === "rip" ? "Finish" : "Continue"} <ChevronRight /></button>
 </footer>
 
@@ -116,6 +117,12 @@
         flex: 1;
         min-width: 0;
         width: 100%;
+    }
+
+    .flex-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
     .success,

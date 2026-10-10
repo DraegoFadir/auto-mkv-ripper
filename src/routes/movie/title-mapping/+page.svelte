@@ -36,6 +36,7 @@
         }
 
         app.state.titlesMapped.push({
+            id: crypto.randomUUID(),
             title,
             media: movie
         })
@@ -45,7 +46,7 @@
         return app.state.titlesMapped.find((x) => x.title.index === index);
     }
 
-    function getMappedMedia(id: number) {
+    function getMappedMedia(id: number | string) {
         return app.state.titlesMapped.find((x) => x.media.id === id);
     }
 
