@@ -62,12 +62,12 @@
             return;
         }
 
-        // if(defaultEpisode > episodes.length) {
-        //     defaultEpisode = 1
-        // };
+        if(defaultEpisode > episodes.length) {
+            defaultEpisode = 1
+        };
 
-        app.state.titlesMapped = app.state.titlesSelected.map((title) => {
-            let episodeNumber: number | undefined = defaultEpisode + title.index;
+        app.state.titlesMapped = app.state.titlesSelected.map((title, index) => {
+            let episodeNumber: number | undefined = defaultEpisode + index;
             let map: TitleMap = { id: crypto.randomUUID(), media, title, episode: { season: defaultSeason, episode: episodeNumber }};
             return map;
         });

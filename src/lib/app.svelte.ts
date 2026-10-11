@@ -50,7 +50,7 @@ const defaults = (): AppStateType => ({
     mediaSelected: [],
     titlesSelected: [],
     titlesMapped: [],
-    currentStep: null,
+    currentStep: "search",
     alert: null,
 });
 

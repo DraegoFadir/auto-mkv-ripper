@@ -158,10 +158,12 @@
     <MediaCardComponent media={title.media}>
 
         {#snippet titleInfo()}
-            <div>
-                <kbd>Season {String(title.episode?.season).padStart(2, "0")}</kbd>
-                <kbd>Episode {String(title.episode?.episode).padStart(2, "0")}</kbd>
-            </div>
+            {#if title.media.kind === "Series"}
+                <div>
+                    <kbd>Season {String(title.episode?.season).padStart(2, "0")}</kbd>
+                    <kbd>Episode {String(title.episode?.episode).padStart(2, "0")}</kbd>
+                </div>
+            {/if}
         {/snippet}
 
         {#if title.ripStatus === "started"}

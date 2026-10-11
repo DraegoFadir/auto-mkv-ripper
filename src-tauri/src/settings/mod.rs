@@ -22,9 +22,9 @@ pub struct Settings {
 }
 
 // Not used right now but will be used to store sensitive data more securely than a raw text json
-pub struct PrivateSettings {
-    sftp_password: String,
-}
+// pub struct PrivateSettings {
+//     sftp_password: String,
+// }
 
 impl Settings {
     fn require_non_empty(value: &str, label: &str) -> anyhow_tauri::TAResult<String> {

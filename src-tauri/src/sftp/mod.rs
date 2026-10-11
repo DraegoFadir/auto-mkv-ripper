@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{fs, sync::Arc};
 
 use anyhow::Context;
 use anyhow_tauri::{IntoTAResult, TAResult};
@@ -10,7 +10,7 @@ use russh_sftp::client::SftpSession;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use ts_rs::TS;
 use tokio::fs::File as LocalFile;
-use crate::{models::{Status, TitleProgress, TitleStatus}, settings::{self, Settings}};
+use crate::{models::{Status, TitleProgress, TitleStatus}, settings::Settings};
 
 struct Client;
 
@@ -19,15 +19,15 @@ impl russh::client::Handler for Client {
 
     async fn check_server_key(
         &mut self,
-        server_public_key: &PublicKeyOrCertificate,
+        _server_public_key: &PublicKeyOrCertificate,
     ) -> Result<bool, Self::Error> {
         Ok(true)
     }
 
     async fn data(
         &mut self,
-        channel: ChannelId,
-        data: &[u8],
+        _channel: ChannelId,
+        _data: &[u8],
         _session: &mut client::Session,
     ) -> Result<(), Self::Error> {
         Ok(())
@@ -82,6 +82,10 @@ pub async fn send_sftp(app: AppHandle, title_index: u32, sftp: Sftp)  -> TAResul
 
         let result = run_sftp(&app, title_index, &sftp, sftp_session).await;
         let status = if result.is_ok() { Status::Done } else { Status::Failed };
+
+        if result.is_ok() {
+            fs::remove_file(sftp.local_path).into_ta_result()?;
+        }
         
         app.emit("sftp-status", TitleStatus { title_index, status }).ok();
         result
@@ -106,7 +110,6 @@ async fn run_sftp(app: &AppHandle, title_index: u32, sftp: &Sftp, sftp_session: 
         MediaType::Movie => remote = settings.sftp_movie_path()?,
         MediaType::Series => remote = settings.sftp_tvshow_path()?,
         MediaType::Anime => remote = settings.sftp_anime_path()?,
-        _ => anyhow_tauri::bail!("invalid media_type"),
     }
 
     
