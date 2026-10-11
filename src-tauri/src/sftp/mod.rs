@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{fs, sync::Arc};
 
 use anyhow::Context;
 use anyhow_tauri::{IntoTAResult, TAResult};
@@ -82,6 +82,10 @@ pub async fn send_sftp(app: AppHandle, title_index: u32, sftp: Sftp)  -> TAResul
 
         let result = run_sftp(&app, title_index, &sftp, sftp_session).await;
         let status = if result.is_ok() { Status::Done } else { Status::Failed };
+
+        if result.is_ok() {
+            fs::remove_file(sftp.local_path).into_ta_result()?;
+        }
         
         app.emit("sftp-status", TitleStatus { title_index, status }).ok();
         result
