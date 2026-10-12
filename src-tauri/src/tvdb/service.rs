@@ -59,6 +59,7 @@ impl TVDBService {
             .into_ta_result()?;
 
         let body: String = res.text().await.into_ta_result()?;
+        println!("{body}");
         serde_json::from_str::<T>(&body).into_ta_result()
     }
 
