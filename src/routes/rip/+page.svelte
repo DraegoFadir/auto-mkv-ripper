@@ -113,12 +113,23 @@
                 const series = media as TVDBData;
                 const year = series.year;
                 const name = `${series.name} (${year}) [tvdbid-${series.id}]`;
-                const seasonStr = String(map.episode?.season).padStart(2, "0");
-                const episodeStr = String(map.episode?.episode).padStart(2, "0");
+                const seasonStr = String(map.season?.number).padStart(2, "0");
+                let episodeStr: string = "";
+
+                if(map.episodes?.length) {
+                    const firstEpisode = map.episodes[0];
+                    episodeStr += `E${String(firstEpisode.number).padStart(2, "0")}`;
+
+                    if(map.episodes.length > 1) {
+                        const lastEpisode = map.episodes[map.episodes.length - 1];
+                        episodeStr += `-E${String(lastEpisode.number).padStart(2, "0")}`;
+                    }
+                }
+                
                 sftp = {
                     local_path,
                     remote_path: `${name}/Season ${seasonStr}`,
-                    file_path: `${series.name} - S${seasonStr}E${episodeStr} - ${quality}.mkv`,
+                    file_path: `${series.name} - S${seasonStr}${episodeStr} - ${quality}.mkv`,
                     media_type: media.kind
                 }
                 break;
@@ -160,8 +171,10 @@
         {#snippet titleInfo()}
             {#if title.media.kind === "Series"}
                 <div>
-                    <kbd>Season {String(title.episode?.season).padStart(2, "0")}</kbd>
-                    <kbd>Episode {String(title.episode?.episode).padStart(2, "0")}</kbd>
+                    <kbd>Season {String(title.season?.number).padStart(2, "0")}</kbd>
+                    {#each title.episodes as episode(episode.id)}
+                        <kbd>Episode {String(episode.number).padStart(2, "0")}</kbd>
+                    {/each}
                 </div>
             {/if}
         {/snippet}
