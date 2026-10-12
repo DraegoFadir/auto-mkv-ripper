@@ -72,7 +72,7 @@ pub struct Episode {
     id: u32,
     number: u32,
     name: Option<String>,
-    image: String,
+    image: Option<String>,
     #[serde(alias = "seasonNumber")]
     season_number: u32,
 }
