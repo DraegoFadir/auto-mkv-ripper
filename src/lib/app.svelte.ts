@@ -1,5 +1,7 @@
 import { goto } from "$app/navigation";
+import type { Episode } from "../bindings/Episode";
 import type { Media } from "../bindings/Media";
+import type { Season } from "../bindings/Season";
 import type { Status } from "../bindings/Status";
 import type { Title } from "../bindings/Title";
 
@@ -12,16 +14,13 @@ export type Progress = {
     max: number
 }
 
-export type Episode = {
-    season: number | undefined,
-    episode: number | undefined
-}
-
 export type TitleMap = {
     id: string;
     title: Title;
     media: Media;
-    episode?: Episode;
+    season?: Season;
+    startEpisode?: Episode;
+    episodes?: Episode[];
     ripStatus?: Status;
     ripProgress?: Progress;
     sftpStatus?: Status;
@@ -121,6 +120,7 @@ class AppState {
     }
     
     resetAlert = () => { this.state.alert = defaults().alert }
+    resetTitleMapping = () => { this.state.titlesMapped = defaults().titlesMapped }
     setAlert = (alert: Alert) => { 
         clearTimeout(this.alertTimer)
         this.state.alert = alert;
