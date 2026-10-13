@@ -1,6 +1,6 @@
 <script lang="ts">
     import { app, type TitleMap } from "$lib/app.svelte";
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte"
     import MediaCardComponent from "../../../components/MediaCardComponent.svelte";
     import { rust } from "$lib/rust.svelte";
     import type { Media } from "../../../bindings/Media";
@@ -45,12 +45,8 @@
         maps.forEach((map, _index) => {
             let error: string | undefined;
 
-            if(!map.startEpisode || !map.episodes) {
+            if(!map.episodes?.length) {
                 error = "Invalid episode mapping";
-            } else if (map.startEpisode.number > episodes.length) {
-                error = "Invalid episode selection";
-            } else if (maps.some((x, index) => index !== _index && JSON.stringify(x.startEpisode) === JSON.stringify(map.startEpisode))) {
-                error = "Duplicate episode detected";
             } else if (maps.some((x, index) => index !== _index && x.episodes?.some((e) => map.episodes?.includes(e)))) {
                 error = "Duplicate episode detected";
             }
@@ -81,24 +77,65 @@
             }
 
             let startEpisode = episodes.find((e) => e.number === episodeNumber);
-            let map: TitleMap = { id: crypto.randomUUID(), media, title, startEpisode: undefined };
+            let map: TitleMap = { id: crypto.randomUUID(), media, title };
 
             if(startEpisode) {
-                map = { ...map, startEpisode, episodes: [startEpisode], season: defaultSeason }
+                map = { ...map, episodes: [startEpisode], season: defaultSeason }
             }
 
             app.state.titlesMapped.push(map);
         });
     }
 
-    function updateMappedEpisodes(map: TitleMap) {
+    function updateSeason(map: TitleMap) {
         const season = map.season;
-        if(season && !map.startEpisode) {
-            map.startEpisode = media.episodes.filter((x) => x.season_number === season.number)[0]
+        if(!season) {
+            return 
         }
-        if(map.startEpisode) {
-            map.episodes = [map.startEpisode]
+
+        const startEpisode = media.episodes.filter((x) => x.season_number === season.number)[0];
+        if(startEpisode) {
+            map.episodes = [startEpisode]
         }
+    }
+
+    function offsetStartEpisodes(index: number) {
+        // No need to update anything if it's the last title in the mapping
+        // I know this can go above, but it's just easier to read when unrelated checks are in their own if
+        if (index === app.state.titlesMapped.length - 1) {
+            return;
+        }
+        
+        app.state.titlesMapped.map((title, i) => {
+            // No need to update anything before the updated title
+            if (i <= index) {
+                return title;
+            }
+
+            let previousMap = app.state.titlesMapped[i - 1];
+            if(previousMap.episodes?.length) {
+                let lastEpisode = previousMap.episodes[previousMap.episodes.length - 1];
+
+                const startEpisode = episodes.find((e) => e.number === lastEpisode.number + 1);
+                if(!startEpisode) { return title; }             
+                if(!title.episodes?.length) { return title; }
+
+                
+                for(let i = 0; i < title.episodes?.length; i++) {
+                    if(i === 0) {
+                        title.episodes[i] = startEpisode;
+                        continue;
+                    }
+                    const episode = title.episodes[i];
+                    const next = episodes.find((e) => e.number === episode.number + 1);
+                    if(next) {
+                        title.episodes[i] = next;
+                    }
+                }
+            }
+
+            return title;
+        })
     }
 
 </script>
@@ -112,7 +149,7 @@
             <p>Set defaults, then adjust rows for specials or out-of-order episodes. Numbering follows Jellyfin, not the disc.</p>
         </hgroup>
     </header>
-    <main class="row">
+    <main>
         <form role="group" onchange={updateDefaultMap}>
             <select name="Season" aria-label="Season" bind:value={defaultSeason}>
                 {#each seasons as season(season.id)}
@@ -127,31 +164,46 @@
         </form>
     </main>
 </article>
-{#each app.state.titlesMapped as map(map.id)}
+{#each app.state.titlesMapped as map, i (map.id)}
 <MediaCardComponent media={map.media}>
     {#snippet titleInfo()}
-        <div>
+        <div class="grid">
             <kbd>Title Index: {map.title.index}</kbd>
             <kbd>Duration: {map.title.duration}</kbd>
             <kbd>Chapters: {map.title.chapters}</kbd>
         </div>
     {/snippet}
-    <form onchange={() => updateMappedEpisodes(map)}>
-        <select name="Season" aria-label="Season" bind:value={map.season}>
+    <form>
+        <select name="Season" aria-label="Season" bind:value={map.season} onchange={() => updateSeason(map)}>
             <option value={undefined}>Select an item</option>
             {#each seasons as season(season.id)}
                 <option value={season}>Season {String(season.number).padStart(2, "0")}{season.name ? ` - ${season.name}`: ""}</option>
             {/each}
         </select>
-        <select name="Episode" aria-label="Episode" bind:value={map.startEpisode} aria-invalid={map.error ? true : undefined} aria-describedby="invalid-episode">
-            <option value={undefined}>Select an item</option>
-            {#each media.episodes.filter((x) => x.season_number === map.season?.number) as episode(episode.id) }
-                <option value={episode}>Episode {String(episode.number).padStart(2, "0")}{episode.name ? ` - ${episode.name}`: ""}</option>
-            {/each}
-        </select>
+        <details class="dropdown">
+            <!-- svelte-ignore a11y_role_supports_aria_props_implicit -->
+            <summary aria-invalid={map.error ? true : undefined} aria-describedby="invalid-episode">Select episodes in title</summary>
+            <ul>
+                {#each media.episodes.filter((x) => x.season_number === map.season?.number) as episode(episode.id)}
+                    <li>
+                        <label>
+                            <input type="checkbox" bind:group={map.episodes} value={episode} onchange={() => offsetStartEpisodes(i)} />
+                            Episode {String(episode.number).padStart(2, "0")}{episode.name ? ` - ${episode.name}`: ""}
+                        </label>
+                    </li>
+                {/each}
+            </ul>
+        </details>
+        {#if map.error}<small id="invalid-episode">{map.error}</small>{/if}
     </form>
-    {#if map.error}<small id="invalid-episode">{map.error}</small>{/if}
 
+    {#snippet footer()}
+        <div class="badges">
+            {#each map.episodes as episode(episode.id)}
+            <kbd>Episode {String(episode.number).padStart(2, "0")}</kbd>
+            {/each}
+        </div>
+    {/snippet}
 </MediaCardComponent>
 {/each}
 
@@ -159,6 +211,28 @@
     .row {
         display: flex;
         gap: 1rem;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dropdown ul {
+        max-height: 16rem;  /* about 5–6 options */
+        overflow-y: auto;   /* scroll inside the list instead of the page */
+    }
+
+    details.dropdown:has(summary[aria-invalid="true"]) + small {
+        color: var(--pico-del-color);
+    }
+    details.dropdown:has(summary[aria-invalid="false"]) + small {
+        color: var(--pico-ins-color);
+    }
+
+    .badges {
+        display: flex;
+        gap: .25rem;
+        flex-wrap: wrap;
         align-items: flex-start;
+        align-content: flex-start;
+        align-self: center;
     }
 </style>

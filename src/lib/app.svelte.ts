@@ -19,7 +19,6 @@ export type TitleMap = {
     title: Title;
     media: Media;
     season?: Season;
-    startEpisode?: Episode;
     episodes?: Episode[];
     ripStatus?: Status;
     ripProgress?: Progress;
