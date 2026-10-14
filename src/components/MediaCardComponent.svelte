@@ -3,31 +3,41 @@
     import type { HTMLAttributes } from "svelte/elements";
     import type { Media } from "../bindings/Media";
 
-    let { media, alignChildrenEnd = false, children, titleInfo, ...rest } : { media: Media, alignChildrenEnd?: boolean, children?: Snippet, titleInfo?: Snippet } & HTMLAttributes<HTMLElement> = $props();
+    let { media, alignChildrenEnd = false, children, header, body, footer, ...rest } : { media: Media, alignChildrenEnd?: boolean, children?: Snippet, header?: Snippet; body?: Snippet, footer?: Snippet } & HTMLAttributes<HTMLElement> = $props();
 </script>
 
 
 <article {...rest}>
-    <div class="movie-details">
+    {#if header}
+        <header>
+        {@render header?.()}
+        </header>
+    {/if}
+    <main class="movie-details">
         {#if media.kind === "Movie"}
             <img src="https://image.tmdb.org/t/p/w342/{media.poster_path}" alt="{media.title}" />
-            <div>
+            <!-- <div>
                 <p>{media.title} ({media.release_date?.substring(0, 4)})</p>
-                {@render titleInfo?.()}
-            </div>
+                {@render body?.()}
+            </div> -->
         {/if}
 
         {#if media.kind === "Series"}
             <img src="{media.image_url}" alt="{media.name}" />
-            <div class="info">
-                <p>{media.name} ({media.year})</p>
-                {@render titleInfo?.()}
-            </div>
         {/if}
+        <div class="info">
+            <!-- <p>{media.name} ({media.year})</p> -->
+            {@render body?.()}
+        </div>
         <div class:end={alignChildrenEnd}>
             {@render children?.()}
         </div>
-    </div>
+    </main>
+    {#if footer}
+    <footer>
+        {@render footer?.()}
+    </footer>
+    {/if}
 </article>
 
 <style>
@@ -37,6 +47,11 @@
         background: transparent;
         border: 1px solid var(--pico-muted-border-color);
         background: var(--pico-card-sectioning-background-color);
+    }
+    
+    article > header,
+    article > footer {
+        background: var(--pico-card-background-color);
     }
 
     article img {

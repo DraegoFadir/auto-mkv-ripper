@@ -81,7 +81,36 @@
 
         const media = map.media;
 
+        // TODO: Add settings access to rust
+        let sftp: Sftp | null = null;
+        
+        const local_path = `${settings.output_directory}/${map.title.file_name}`;
+        const remote_path = getMapRemote(map);
 
+        if(!remote_path) {
+            map.sftpStatus = "failed";
+            return;
+        }
+        
+        sftp = {
+            local_path,
+            remote_path: remote_path?.remotePath,
+            file_path: remote_path?.filePath,
+            media_type: media.kind,
+            split_path: `/_${app.state.discType}`
+        }
+
+        if(sftp) {
+            const unlisten = await listen<Progress>("sftp-progress", (e) => {
+                map.sftpProgress = e.payload;
+            });
+
+            await rust("send_sftp", { sftp, titleIndex: map.title.index })
+            unlisten();
+        }
+    }
+
+    function getMapRemote(map: TitleMap): { remotePath: string, filePath: string } | undefined {
         const quality_map: Record<DiscType, string> = {
             "dvd": "480p",
             "bluray": "1080p",
@@ -90,27 +119,15 @@
 
         const quality = quality_map[app.state.discType];
 
-        // TODO: Add settings access to rust
-        let sftp: Sftp | null = null;
-        
-        const local_path = `${settings.output_directory}/${map.title.file_name}`;
-
-        switch(media.kind) {
+        switch(map.media.kind) {
             case "Movie": {
-                const movie = media as TMDBData;
+                const movie = map.media as TMDBData;
                 const year = movie.release_date?.substring(0, 4) ?? "0000";
                 const name = `${movie.title} (${year}) [tmdbid-${movie.id}]`;
-                sftp = {
-                    local_path,
-                    remote_path: `${name}`,
-                    file_path: `${name} - ${quality}.mkv`,
-                    media_type: media.kind,
-                    split_path: `/_${app.state.discType}`
-                }
-                break;
+                return { remotePath: `${name}`, filePath: `${name} - ${quality}.mkv`}
             }
             case "Series": {
-                const series = media as TVDBData;
+                const series = map.media as TVDBData;
                 const year = series.year;
                 const name = `${series.name} (${year}) [tvdbid-${series.id}]`;
                 const seasonStr = String(map.season?.number).padStart(2, "0");
@@ -125,33 +142,18 @@
                         episodeStr += `-E${String(lastEpisode.number).padStart(2, "0")}`;
                     }
                 }
-                
-                sftp = {
-                    local_path,
-                    remote_path: `${name}/Season ${seasonStr}`,
-                    file_path: `${series.name} - S${seasonStr}${episodeStr} - ${quality}.mkv`,
-                    media_type: media.kind
-                }
-                break;
+
+                return { remotePath: `${name}/Season ${seasonStr}`, filePath: `${series.name} - S${seasonStr}${episodeStr} - ${quality}.mkv`}
             }
             default:
                 app.setAlert({ message: "Invalid media kind", type: "error" });
-        }
-
-        if(sftp) {
-            const unlisten = await listen<Progress>("sftp-progress", (e) => {
-                map.sftpProgress = e.payload;
-            });
-
-            await rust("send_sftp", { sftp, titleIndex: map.title.index })
-            unlisten();
         }
     }
 
 </script>
 
 <hgroup>
-    <h1>Rip & Upload</h1>
+    <h2>Rip & Upload</h2>
     <p>Check your mapping, then press start. Ripping, uploading, and Jellyfin naming are handled for you</p>
 </hgroup>
 <input type="button" value="Start Rip & Upload" onclick={beginRip} disabled={started} />
@@ -168,15 +170,13 @@
 {#each app.state.titlesMapped as title(title.id)}
     <MediaCardComponent media={title.media}>
 
-        {#snippet titleInfo()}
-            {#if title.media.kind === "Series"}
-                <div>
-                    <kbd>Season {String(title.season?.number).padStart(2, "0")}</kbd>
-                    {#each title.episodes as episode(episode.id)}
-                        <kbd>Episode {String(episode.number).padStart(2, "0")}</kbd>
-                    {/each}
-                </div>
-            {/if}
+
+
+        {#snippet header()}
+            <hgroup>
+                <h3>{title.media.kind === "Movie" ? title.media.title : title.media.name}</h3>
+                <p>{getMapRemote(title)?.filePath}</p>
+            </hgroup>
         {/snippet}
 
         {#if title.ripStatus === "started"}
