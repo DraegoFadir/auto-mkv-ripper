@@ -140,7 +140,7 @@
 
 </script>
 
-<h1>Episode Mapping</h1>
+<h2>Episode Mapping</h2>
 {#if loading} <progress></progress> {/if}
 <article>
     <header>
@@ -166,7 +166,13 @@
 </article>
 {#each app.state.titlesMapped as map, i (map.id)}
 <MediaCardComponent media={map.media}>
-    {#snippet titleInfo()}
+    {#snippet header()}
+        <hgroup>
+            <h3>{ map.media.kind === "Movie" ? map.media.title : map.media.name }</h3>
+            <p>{map.title.file_name}</p>
+        </hgroup>
+    {/snippet}
+    {#snippet body()}
         <div class="grid">
             <kbd>Title Index: {map.title.index}</kbd>
             <kbd>Duration: {map.title.duration}</kbd>

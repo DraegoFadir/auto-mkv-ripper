@@ -153,7 +153,7 @@
 </script>
 
 <hgroup>
-    <h1>Rip & Upload</h1>
+    <h2>Rip & Upload</h2>
     <p>Check your mapping, then press start. Ripping, uploading, and Jellyfin naming are handled for you</p>
 </hgroup>
 <input type="button" value="Start Rip & Upload" onclick={beginRip} disabled={started} />
@@ -170,8 +170,13 @@
 {#each app.state.titlesMapped as title(title.id)}
     <MediaCardComponent media={title.media}>
 
-        {#snippet titleInfo()}
-            <kbd>{getMapRemote(title)?.filePath}</kbd>
+
+
+        {#snippet header()}
+            <hgroup>
+                <h3>{title.media.kind === "Movie" ? title.media.title : title.media.name}</h3>
+                <p>{getMapRemote(title)?.filePath}</p>
+            </hgroup>
         {/snippet}
 
         {#if title.ripStatus === "started"}

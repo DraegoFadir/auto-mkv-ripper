@@ -74,6 +74,9 @@
                 {#each results.filter((m) => !app.state.mediaSelected.includes(m)) as media(media.id) }
                 <label class="media-select-label">
                     <MediaCardComponent media={media} alignChildrenEnd>
+                            {#snippet body()}
+                                { media.kind === "Movie" ? media.title : media.name }
+                            {/snippet}
                         <input type="checkbox" name={`${media.id}`} bind:group={app.state.mediaSelected} value={media} />
                     </MediaCardComponent>
                 </label>
@@ -95,10 +98,13 @@
 
         <main>
             {#if app.state.mediaSelected.length > 0}
-                {#each app.state.mediaSelected as m (m.id)}
+                {#each app.state.mediaSelected as media (media.id)}
                     <label class="media-select-label">
-                        <MediaCardComponent media={m} alignChildrenEnd>
-                            <input type="checkbox" name={`${m.id}`} bind:group={app.state.mediaSelected} value={m} />
+                        <MediaCardComponent media={media} alignChildrenEnd>
+                            {#snippet body()}
+                                { media.kind === "Movie" ? media.title : media.name }
+                            {/snippet}
+                            <input type="checkbox" name={`${media.id}`} bind:group={app.state.mediaSelected} value={media} />
                         </MediaCardComponent>
                     </label>
                 {/each}
